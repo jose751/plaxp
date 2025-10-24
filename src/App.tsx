@@ -1,4 +1,4 @@
-import { LoginPage } from './features/login'
+import { LoginPage } from './features/security'
 
 function App() {
   return <LoginPage />
