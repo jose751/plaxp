@@ -5,6 +5,7 @@
 
 // Páginas
 export { LoginPage } from './pages/LoginPage';
+export { PasswordRecoveryPage } from './pages/PasswordRecoveryPage';
 
 // Componentes
 export { LoginCard } from './components/LoginCard';

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { InputField } from '../../../shared/components/InputField';
 
@@ -77,12 +78,12 @@ export const LoginCard: React.FC = () => {
                 Recordarme
               </label>
             </div>
-            <a
-              href="#"
+            <Link
+              to="/password-recovery"
               className="font-medium text-primary hover:opacity-80 transition-opacity"
             >
               ¿Olvidaste tu Contraseña?
-            </a>
+            </Link>
           </div>
 
           {/* Botón Principal */}
