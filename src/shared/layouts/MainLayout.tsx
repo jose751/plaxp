@@ -1,5 +1,5 @@
 import React, { useState, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/security/hooks/useAuth';
 
 interface MainLayoutProps {
@@ -16,6 +16,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Para desktop
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -42,7 +43,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         `}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-center border-b border-neutral-200 px-4 bg-white/50 backdrop-blur-sm">
+        <div className="h-16 flex items-center justify-center border-b border-neutral-200 px-4 bg-white/50 backdrop-blur-sm m-6">
           {sidebarCollapsed ? (
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-md transform hover:scale-110 transition-transform">
               <span className="text-white font-bold text-lg">P</span>
@@ -54,17 +55,33 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         {/* Navigation Menu */}
         <nav className="flex-1 py-6 px-3 overflow-y-auto">
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {/* Dashboard */}
             <Link
               to="/dashboard"
               onClick={() => setSidebarOpen(false)}
-              className="group flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-700 hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:text-primary transition-all duration-200 relative overflow-hidden"
+              className={`
+                group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden
+                ${location.pathname === '/dashboard'
+                  ? 'bg-gradient-to-r from-blue-500/15 to-blue-500/5 text-blue-600 shadow-sm'
+                  : 'text-neutral-700 hover:bg-neutral-100/80'
+                }
+              `}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-transparent transition-all duration-300"></div>
-              <div className="relative z-10 p-1.5 rounded-lg bg-neutral-100 group-hover:bg-primary/10 transition-colors">
+              {/* Indicador de página activa */}
+              {location.pathname === '/dashboard' && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-r-full"></div>
+              )}
+
+              <div className={`
+                relative z-10 p-2 rounded-lg transition-all duration-200
+                ${location.pathname === '/dashboard'
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-md shadow-blue-500/30'
+                  : 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-md shadow-blue-500/20 group-hover:shadow-blue-500/30'
+                }
+              `}>
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -80,18 +97,39 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               {!sidebarCollapsed && (
                 <span className="relative z-10 font-semibold text-sm">Dashboard</span>
               )}
+              {location.pathname === '/dashboard' && !sidebarCollapsed && (
+                <div className="ml-auto">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                </div>
+              )}
             </Link>
 
             {/* Usuarios */}
             <Link
               to="/usuarios"
               onClick={() => setSidebarOpen(false)}
-              className="group flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-700 hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:text-primary transition-all duration-200 relative overflow-hidden"
+              className={`
+                group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden
+                ${location.pathname === '/usuarios'
+                  ? 'bg-gradient-to-r from-purple-500/15 to-purple-500/5 text-purple-600 shadow-sm'
+                  : 'text-neutral-700 hover:bg-neutral-100/80'
+                }
+              `}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-transparent transition-all duration-300"></div>
-              <div className="relative z-10 p-1.5 rounded-lg bg-neutral-100 group-hover:bg-primary/10 transition-colors">
+              {/* Indicador de página activa */}
+              {location.pathname === '/usuarios' && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-purple-500 to-purple-600 rounded-r-full"></div>
+              )}
+
+              <div className={`
+                relative z-10 p-2 rounded-lg transition-all duration-200
+                ${location.pathname === '/usuarios'
+                  ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/30'
+                  : 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/20 group-hover:shadow-purple-500/30'
+                }
+              `}>
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -106,6 +144,118 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               {!sidebarCollapsed && (
                 <span className="relative z-10 font-semibold text-sm">Usuarios</span>
+              )}
+              {location.pathname === '/usuarios' && !sidebarCollapsed && (
+                <div className="ml-auto">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></div>
+                </div>
+              )}
+            </Link>
+
+            {/* Separador */}
+            <div className="py-2">
+              <div className="h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent"></div>
+            </div>
+
+            {/* Configuración */}
+            <Link
+              to="/configuracion"
+              onClick={() => setSidebarOpen(false)}
+              className={`
+                group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden
+                ${location.pathname === '/configuracion'
+                  ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 text-emerald-600 shadow-sm'
+                  : 'text-neutral-700 hover:bg-neutral-100/80'
+                }
+              `}
+            >
+              {/* Indicador de página activa */}
+              {location.pathname === '/configuracion' && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-r-full"></div>
+              )}
+
+              <div className={`
+                relative z-10 p-2 rounded-lg transition-all duration-200
+                ${location.pathname === '/configuracion'
+                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/30'
+                  : 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20 group-hover:shadow-emerald-500/30'
+                }
+              `}>
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              {!sidebarCollapsed && (
+                <span className="relative z-10 font-semibold text-sm">Configuración</span>
+              )}
+              {location.pathname === '/configuracion' && !sidebarCollapsed && (
+                <div className="ml-auto">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                </div>
+              )}
+            </Link>
+
+            {/* Reportes */}
+            <Link
+              to="/reportes"
+              onClick={() => setSidebarOpen(false)}
+              className={`
+                group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden
+                ${location.pathname === '/reportes'
+                  ? 'bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-orange-600 shadow-sm'
+                  : 'text-neutral-700 hover:bg-neutral-100/80'
+                }
+              `}
+            >
+              {/* Indicador de página activa */}
+              {location.pathname === '/reportes' && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-orange-500 to-orange-600 rounded-r-full"></div>
+              )}
+
+              <div className={`
+                relative z-10 p-2 rounded-lg transition-all duration-200
+                ${location.pathname === '/reportes'
+                  ? 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-md shadow-orange-500/30'
+                  : 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-md shadow-orange-500/20 group-hover:shadow-orange-500/30'
+                }
+              `}>
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              {!sidebarCollapsed && (
+                <span className="relative z-10 font-semibold text-sm">Reportes</span>
+              )}
+              {location.pathname === '/reportes' && !sidebarCollapsed && (
+                <div className="ml-auto">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></div>
+                </div>
               )}
             </Link>
           </div>

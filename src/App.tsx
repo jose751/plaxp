@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { LoginPage, PasswordRecoveryPage } from './features/security'
+import { LoginPage, PasswordRecoveryPage, VerifyCodePage, ResetPasswordPage } from './features/security'
 import { UsersPage } from './features/users'
 import { AuthProvider } from './shared/contexts/AuthContext'
 import { LoadingProvider } from './shared/contexts/LoadingContext'
@@ -24,6 +24,16 @@ function App() {
               <Route path="/password-recovery" element={
                 <PublicRoute>
                   <PasswordRecoveryPage />
+                </PublicRoute>
+              } />
+              <Route path="/verify-code" element={
+                <PublicRoute>
+                  <VerifyCodePage />
+                </PublicRoute>
+              } />
+              <Route path="/reset-password" element={
+                <PublicRoute>
+                  <ResetPasswordPage />
                 </PublicRoute>
               } />
 

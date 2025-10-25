@@ -1,7 +1,8 @@
 import PaginatedDataTable, {
   type PaginatedResponse,
   type ColumnDefinition,
-  type BaseItem
+  type BaseItem,
+  type StatusOption
 } from '../../../shared/components/PaginatedDataTable';
 
 // Interfaz de Usuario
@@ -38,11 +39,18 @@ const columns: ColumnDefinition<User>[] = [
   { key: 'ultimoAcceso', header: 'Último Acceso' },
 ];
 
+// Definir opciones de estado
+const statusOptions: StatusOption[] = [
+  { label: 'Activo', value: 'activo', color: 'green' },
+  { label: 'Inactivo', value: 'inactivo', color: 'red' },
+];
+
 // Función mock para simular llamada al API
 const fetchUsers = async (
   page: number,
   limit: number,
-  query: string
+  query: string,
+  status?: string
 ): Promise<PaginatedResponse<User>> => {
   // Simular delay de red
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -51,11 +59,18 @@ const fetchUsers = async (
   let filteredUsers = FAKE_USERS;
   if (query) {
     const lowerQuery = query.toLowerCase();
-    filteredUsers = FAKE_USERS.filter(
+    filteredUsers = filteredUsers.filter(
       user =>
         user.nombre.toLowerCase().includes(lowerQuery) ||
         user.correo.toLowerCase().includes(lowerQuery) ||
         user.rol.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  // Filtrar por estado
+  if (status) {
+    filteredUsers = filteredUsers.filter(
+      user => user.estado.toLowerCase() === status.toLowerCase()
     );
   }
 
@@ -89,6 +104,7 @@ export const UsersPage = () => {
       fetchDataFunction={fetchUsers}
       onRowClick={handleRowClick}
       onCreateNew={handleCreateNew}
+      statusOptions={statusOptions}
     />
   );
 };

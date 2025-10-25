@@ -28,8 +28,10 @@ export const usePasswordRecovery = () => {
     try {
       await context.sendRecoveryEmail(email);
       setSuccess(true);
-    } catch (err) {
-      setError('Error al enviar el correo. Por favor, intenta de nuevo.');
+    } catch (err: any) {
+      // Mostrar el mensaje del API si está disponible
+      const errorMessage = err?.message || 'Error al enviar el correo. Por favor, intenta de nuevo.';
+      setError(errorMessage);
       console.error('Error al enviar correo:', err);
     }
   };

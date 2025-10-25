@@ -115,6 +115,16 @@ class ApiService {
     const url = this.buildURL(endpoint, params);
     const headers = this.buildHeaders(config);
 
+    // Debug: log de la petición
+    console.log('📡 API Request:', {
+      method,
+      endpoint,
+      url,
+      data,
+      headers,
+      cookies: document.cookie,
+    });
+
     // Determinar timeout según el tipo de operación
     const timeout = config.loadingType === LoadingType.UPLOADING
       ? API_TIMEOUTS.upload
@@ -132,12 +142,28 @@ class ApiService {
         headers,
         body: data ? JSON.stringify(data) : undefined,
         signal: controller.signal,
+        credentials: 'include', // Enviar cookies automáticamente
       });
 
       clearTimeout(timeoutId);
+
+      // Debug: log de la respuesta
+      console.log('📡 API Response:', {
+        endpoint,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
       return await this.handleResponse<T>(response);
     } catch (error) {
       clearTimeout(timeoutId);
+
+      // Debug: log del error
+      console.error('📡 API Error:', {
+        endpoint,
+        error,
+      });
 
       // Manejar errores de red o timeout
       if (error instanceof ApiError) {
@@ -246,6 +272,7 @@ class ApiService {
         headers,
         body: formData,
         signal: controller.signal,
+        credentials: 'include', // Enviar cookies automáticamente
       });
 
       clearTimeout(timeoutId);

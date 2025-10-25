@@ -6,9 +6,15 @@
 // Páginas
 export { LoginPage } from './pages/LoginPage';
 export { PasswordRecoveryPage } from './pages/PasswordRecoveryPage';
+export { VerifyCodePage } from './pages/VerifyCodePage';
+export { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 // Componentes
 export { LoginCard } from './components/LoginCard';
+export { PasswordRecoveryCard } from './components/PasswordRecoveryCard';
+export { VerifyCodeCard } from './components/VerifyCodeCard';
+export { ResetPasswordCard } from './components/ResetPasswordCard';
+export { CodeInput } from './components/CodeInput';
 export { InputField } from '../../shared/components/InputField';
 
 // Hooks
@@ -21,6 +27,21 @@ export type { PasswordRecoveryContextType } from './context/PasswordRecoveryCont
 
 // Schemas
 export type { ValidationResult, LoginFormData } from './schemas/loginSchema';
+export type {
+  User,
+  LoginResponse,
+  RecuperacionResponse,
+  VerificarCodigoResponse,
+  RestablecerContrasenaResponse,
+} from './schemas/securityApiSchema';
+
+// API
+export {
+  loginApi,
+  solicitarRecuperacionApi,
+  verificarCodigoRecuperacionApi,
+  restablecerContrasenaApi,
+} from './api/SecurityApi';
 
 // Validaciones
 export { LoginValidation } from './validations/loginValidation';

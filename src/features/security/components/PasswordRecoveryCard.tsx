@@ -1,12 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { InputField } from '../../../shared/components/InputField';
 import { usePasswordRecovery } from '../hooks/usePasswordRecovery';
+import { RecoveryCookies } from '../../../shared/utils/cookieManager';
 
 /**
  * Componente de recuperación de contraseña
  */
 export const PasswordRecoveryCard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     email,
     setEmail,
@@ -17,32 +19,49 @@ export const PasswordRecoveryCard: React.FC = () => {
     success,
   } = usePasswordRecovery();
 
-  return (
-    // Contenedor Principal: Tarjeta de Recuperación (Responsive)
-    <div className="flex w-full max-w-4xl h-auto bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
-      {/* Columna del Icono (Oculta en Móvil) */}
-      <div className="hidden md:flex md:w-2/5 bg-gradient-to-br from-primary/10 to-primary/5 flex-col justify-center items-center p-8">
-        <div className="w-full max-w-xs flex items-center justify-center">
-          <img
-            src="/Login/access_icon.png"
-            alt="Icono de Acceso"
-            className="w-48 h-48 object-contain drop-shadow-lg"
-          />
-        </div>
-        <div className="mt-8 text-center">
-          <h3 className="text-xl font-semibold text-primary mb-2">
-            Recupera tu Acceso
-          </h3>
-          <p className="text-neutral-600 text-sm leading-relaxed px-4">
-            Te enviaremos un código de recuperación a tu correo electrónico
-          </p>
-        </div>
-      </div>
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-      {/* Columna del Formulario */}
-      <div className="w-full md:w-3/5 p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+  // Limpiar cookies al montar el componente (cuando accede a "Olvidé mi contraseña")
+  useEffect(() => {
+    RecoveryCookies.clearRecoveryCookies();
+  }, []);
+
+  // Redirigir automáticamente cuando el correo se envía exitosamente
+  useEffect(() => {
+    if (emailSent && success) {
+      setIsRedirecting(true);
+      // Esperar un momento para que el usuario vea el mensaje de éxito
+      const timer = setTimeout(() => {
+        navigate('/verify-code');
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [emailSent, success, navigate]);
+
+  // Redirigir si ya hay un email enviado (restaurado desde cookies)
+  useEffect(() => {
+    if (emailSent && !success) {
+      setIsRedirecting(true);
+      // Si emailSent es true pero success es false, significa que se restauró desde cookies
+      const timer = setTimeout(() => {
+        navigate('/verify-code');
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    // Contenedor Principal: Tarjeta de Recuperación (Responsive y Centrada)
+    // Se ajusta max-w-lg (mediano) para simular la tarjeta sin la columna lateral
+    <div className="flex w-full max-w-lg h-auto bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto transition-all duration-500">
+      
+      {/* Columna del Formulario (Ahora es la única columna y ocupa todo el ancho) */}
+      <div className="w-full p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+        
         {/* Logo de Marca (Plaxp) */}
-        <div className="mb-6 text-center md:text-left">
+        <div className="mb-6 text-center"> {/* Centrado para mejor estética */}
           <img
             src="/logo.png"
             alt="Plaxp Logo"
@@ -51,7 +70,7 @@ export const PasswordRecoveryCard: React.FC = () => {
         </div>
 
         {/* Encabezado del Formulario */}
-        <div className="mb-8 text-center md:text-left">
+        <div className="mb-8 text-center"> {/* Centrado para mejor estética */}
           <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-2">
             Recuperar Contraseña
           </h1>
@@ -61,8 +80,23 @@ export const PasswordRecoveryCard: React.FC = () => {
         </div>
 
         <form className="space-y-6" onSubmit={handleSendEmail}>
+          {/* Mensaje de redirección */}
+          {isRedirecting && (
+            <div className="p-4 bg-primary/10 border border-primary/30 rounded-xl animate-fade-in">
+              <div className="flex items-center justify-center gap-3">
+                <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-primary text-sm font-medium">
+                  Redirigiendo a verificación de código...
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Mensaje de éxito */}
-          {emailSent && success && (
+          {emailSent && success && !isRedirecting && (
             <div className="p-4 bg-success/10 border border-success/30 rounded-xl">
               <p className="text-success text-sm text-center">
                 Correo enviado exitosamente. Revisa tu bandeja de entrada.
@@ -90,10 +124,18 @@ export const PasswordRecoveryCard: React.FC = () => {
           {/* Botón Principal */}
           <button
             type="submit"
-            disabled={isLoading || emailSent}
+            disabled={isLoading || emailSent || isRedirecting}
             className="w-full py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Enviando...' : emailSent ? 'Correo Enviado' : 'Enviar Código de Recuperación'}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Enviando...
+              </div>
+            ) : emailSent ? 'Correo Enviado' : 'Enviar Código de Recuperación'}
           </button>
         </form>
 
