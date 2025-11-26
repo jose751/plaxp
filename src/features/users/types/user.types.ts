@@ -15,6 +15,7 @@ export interface Usuario {
   nombreRol?: any; // Nombre del rol (puede venir en algunos endpoints)
   idSucursalPrincipal?: string; // Sucursal principal
   idSucursales?: string[]; // Lista de sucursales adicionales
+  pathFoto?: string | null; // Ruta de la foto del usuario
 }
 
 /**
@@ -123,6 +124,7 @@ export interface UsuarioDetalle {
   nombreRol: string;
   idSucursalPrincipal?: string; // Sucursal principal
   idSucursales?: string[]; // Lista de sucursales adicionales
+  pathFoto?: string | null; // Ruta de la foto del usuario
 }
 
 /**

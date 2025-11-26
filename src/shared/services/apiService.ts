@@ -274,9 +274,28 @@ class ApiService {
   }
 
   /**
-   * Upload file
+   * Upload file (POST)
    */
   async upload<T>(endpoint: string, formData: FormData, config?: Partial<ApiRequestConfig>): Promise<T> {
+    return this.uploadWithMethod<T>('POST', endpoint, formData, config);
+  }
+
+  /**
+   * Upload file (PUT)
+   */
+  async uploadPut<T>(endpoint: string, formData: FormData, config?: Partial<ApiRequestConfig>): Promise<T> {
+    return this.uploadWithMethod<T>('PUT', endpoint, formData, config);
+  }
+
+  /**
+   * Upload file with specified HTTP method
+   */
+  private async uploadWithMethod<T>(
+    method: 'POST' | 'PUT',
+    endpoint: string,
+    formData: FormData,
+    config?: Partial<ApiRequestConfig>
+  ): Promise<T> {
     const url = this.buildURL(endpoint, config?.params);
     const token = this.getAuthToken();
 
@@ -292,6 +311,7 @@ class ApiService {
 
     // Debug: log detallado del upload
     console.log('📤 UPLOAD Request:', {
+      method,
       endpoint,
       url,
       timeout: `${API_TIMEOUTS.upload / 1000}s`,
@@ -308,7 +328,7 @@ class ApiService {
       console.log('⏳ Iniciando upload...');
 
       const response = await fetch(url, {
-        method: 'POST',
+        method,
         headers,
         body: formData,
         signal: controller.signal,

@@ -11,6 +11,7 @@ import { listarCategoriasApi } from '../../categorias/api/categoriasApi';
 import type { CrearCursoData } from '../types/curso.types';
 import type { Categoria } from '../../categorias/types/categoria.types';
 import { LoadingOverlay } from '../../../shared/components/LoadingOverlay';
+import { SucursalSelect } from '../../sucursales';
 
 export const CreateEditCursoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export const CreateEditCursoPage: React.FC = () => {
     fechaFin: '',
     enableCompletion: false,
     estado: true,
+    idSucursal: '',
   });
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -78,6 +80,7 @@ export const CreateEditCursoPage: React.FC = () => {
         fechaFin: curso.fechaFin ? curso.fechaFin.split('T')[0] : '',
         enableCompletion: curso.enableCompletion,
         estado: curso.estado,
+        idSucursal: curso.idSucursal || '',
       });
     } catch (error) {
       console.error('Error al cargar curso:', error);
@@ -159,6 +162,11 @@ export const CreateEditCursoPage: React.FC = () => {
           if (value <= formData.fechaInicio) {
             error = 'La fecha de fin debe ser posterior a la fecha de inicio';
           }
+        }
+        break;
+      case 'idSucursal':
+        if (!value) {
+          error = 'La sucursal es requerida';
         }
         break;
     }
@@ -276,8 +284,9 @@ export const CreateEditCursoPage: React.FC = () => {
     const nombreValid = validateField('nombre', formData.nombre);
     const nombreCortoValid = validateField('nombreCorto', formData.nombreCorto);
     const slugValid = validateField('slug', formData.slug);
+    const sucursalValid = validateField('idSucursal', formData.idSucursal);
 
-    if (!categoriaValid || !codigoValid || !nombreValid || !nombreCortoValid || !slugValid) {
+    if (!categoriaValid || !codigoValid || !nombreValid || !nombreCortoValid || !slugValid || !sucursalValid) {
       return;
     }
 
@@ -293,6 +302,7 @@ export const CreateEditCursoPage: React.FC = () => {
         slug: formData.slug.trim(),
         descripcion: formData.descripcion?.trim() || undefined,
         enableCompletion: formData.enableCompletion,
+        idSucursal: formData.idSucursal,
       };
 
       // Solo incluir fechas si tienen valores
@@ -494,6 +504,22 @@ export const CreateEditCursoPage: React.FC = () => {
                   {errors.categoriaId}
                 </p>
               )}
+            </div>
+
+            {/* Sucursal */}
+            <div>
+              <SucursalSelect
+                value={formData.idSucursal}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, idSucursal: value }));
+                  validateField('idSucursal', value);
+                }}
+                error={errors.idSucursal}
+                disabled={loading}
+                required
+                label="Sucursal"
+                placeholder="Seleccionar sucursal"
+              />
             </div>
 
             {/* Código del Curso */}

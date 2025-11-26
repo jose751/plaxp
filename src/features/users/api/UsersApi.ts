@@ -56,22 +56,32 @@ export const listarUsuariosApi = async (
  * Crear un nuevo usuario
  * POST /api/usuarios
  *
- * Body (el frontend convierte estado boolean a número antes de enviar):
- * {
- *   "nombre": "Juan Pérez",
- *   "correo": "juan@example.com",
- *   "contrasena": "Password123!",
- *   "estado": 1,  // 1 = activo, 0 = inactivo
- *   "idRol": "2"
- * }
+ * Se envía siempre como multipart/form-data para soportar fotos.
+ * Los campos se envían como form fields individuales.
+ * idSucursales se envía como campos repetidos (múltiples --form 'idSucursales=X')
  */
 export const crearUsuarioApi = async (
-  data: CrearUsuarioData
+  data: CrearUsuarioData,
+  foto?: File
 ): Promise<CrearUsuarioResponse> => {
-  return await apiService.post<CrearUsuarioResponse>(
-    'usuarios',
-    data
-  );
+  const formData = new FormData();
+  formData.append('nombre', data.nombre);
+  formData.append('correo', data.correo);
+  formData.append('contrasena', data.contrasena);
+  formData.append('estado', String(data.estado));
+  formData.append('idRol', data.idRol);
+  formData.append('idSucursalPrincipal', data.idSucursalPrincipal);
+
+  // Enviar idSucursales como arreglo JSON
+  if (data.idSucursales && data.idSucursales.length > 0) {
+    formData.append('idSucursales', JSON.stringify(data.idSucursales));
+  }
+
+  if (foto) {
+    formData.append('foto', foto);
+  }
+
+  return await apiService.upload<CrearUsuarioResponse>('usuarios', formData);
 };
 
 /**
@@ -93,21 +103,38 @@ export const obtenerUsuarioPorIdApi = async (
  * Actualizar un usuario existente
  * PUT /api/usuarios/{id}
  *
- * Body (el frontend convierte estado boolean a número antes de enviar):
- * {
- *   "nombre": "Juan Pérez",
- *   "correo": "juan@example.com",
- *   "contrasena": "Password123!", // Opcional
- *   "estado": 1,  // 1 = activo, 0 = inactivo
- *   "idRol": "2"
- * }
+ * Se envía siempre como multipart/form-data para soportar fotos.
+ * Los campos se envían como form fields individuales.
+ * idSucursales se envía como campos repetidos (múltiples --form 'idSucursales=X')
  */
 export const actualizarUsuarioApi = async (
   id: string,
-  data: ActualizarUsuarioData
+  data: ActualizarUsuarioData,
+  foto?: File
 ): Promise<ActualizarUsuarioResponse> => {
-  return await apiService.put<ActualizarUsuarioResponse>(
-    `usuarios/${id}`,
-    data
-  );
+  const formData = new FormData();
+  formData.append('nombre', data.nombre);
+  formData.append('correo', data.correo);
+
+  if (data.contrasena) {
+    formData.append('contrasena', data.contrasena);
+  }
+
+  formData.append('estado', String(data.estado));
+  formData.append('idRol', data.idRol);
+
+  if (data.idSucursalPrincipal) {
+    formData.append('idSucursalPrincipal', data.idSucursalPrincipal);
+  }
+
+  // Enviar idSucursales como arreglo JSON
+  if (data.idSucursales && data.idSucursales.length > 0) {
+    formData.append('idSucursales', JSON.stringify(data.idSucursales));
+  }
+
+  if (foto) {
+    formData.append('foto', foto);
+  }
+
+  return await apiService.uploadPut<ActualizarUsuarioResponse>(`usuarios/${id}`, formData);
 };

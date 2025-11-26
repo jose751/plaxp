@@ -92,9 +92,9 @@ const fetchSucursales = async (
 
     const result = {
       data: transformedData,
-      total: response.pagination.totalRecords,
+      total: response.pagination.total,
       page: response.pagination.page,
-      limit: response.pagination.pageSize,
+      limit: response.pagination.limit,
     };
 
     console.log('✅ Resultado que se devuelve a PaginatedDataTable:', result);

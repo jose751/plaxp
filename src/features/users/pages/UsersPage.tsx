@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import PaginatedDataTable, {
   type PaginatedResponse,
@@ -7,25 +8,26 @@ import PaginatedDataTable, {
   type StatusOption
 } from '../../../shared/components/PaginatedDataTable';
 import { listarUsuariosApi } from '../api/UsersApi';
-import type { Usuario, UsuarioDetalle } from '../types/user.types';
-import { CreateUserModal } from '../components/CreateUserModal';
-import { ViewUserModal } from '../components/ViewUserModal';
+import type { Usuario } from '../types/user.types';
+import { UserAvatar } from '../components/UserAvatar';
 
 // Interfaz de Usuario extendida para el componente
 interface User extends BaseItem {
   id: string;
+  usuario: JSX.Element; // Columna con avatar + nombre
   nombre: string;
   correo: string;
   rol: string;
   estado: JSX.Element;
   ultimoAcceso: string;
-  idRol?: string; // ID del rol
-  estadoRaw?: string; // Estado sin transformar para lógica
+  idRol?: string;
+  estadoRaw?: string;
+  pathFoto?: string | null;
 }
 
 // Definir columnas
 const columns: ColumnDefinition<User>[] = [
-  { key: 'nombre', header: 'Nombre' },
+  { key: 'usuario', header: 'Usuario' },
   { key: 'correo', header: 'Correo Electrónico' },
   { key: 'rol', header: 'Rol' },
   { key: 'estado', header: 'Estado' },
@@ -81,15 +83,31 @@ const fetchUsers = async (
         </span>
       );
 
+      // Componente de usuario con avatar + nombre
+      const usuarioCell = (
+        <div className="flex items-center gap-3">
+          <UserAvatar
+            nombre={usuario.nombre}
+            pathFoto={usuario.pathFoto}
+            size="md"
+          />
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
+            {usuario.nombre}
+          </span>
+        </div>
+      );
+
       return {
         id: usuario.id,
+        usuario: usuarioCell,
         nombre: usuario.nombre,
         correo: usuario.correo,
         rol: usuario.nombreRol,
         estado: estadoBadge,
         ultimoAcceso: usuario.ultimoAcceso || 'N/A',
-        idRol: usuario.idRol, // Incluir idRol
+        idRol: usuario.idRol,
         estadoRaw: estadoNormalizado,
+        pathFoto: usuario.pathFoto,
       };
     });
 
@@ -108,102 +126,32 @@ const fetchUsers = async (
 
 // Componente principal
 export const UsersPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [selectedUser, setSelectedUser] = useState<Usuario | undefined>(undefined);
-
-  // Estado para el modal de vista
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewUserId, setViewUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [refreshTrigger, _setRefreshTrigger] = useState(0);
 
   const handleView = (user: User) => {
-    setViewUserId(user.id);
-    setIsViewModalOpen(true);
-  };
-
-  const handleViewModalClose = () => {
-    setIsViewModalOpen(false);
-    setViewUserId(null);
+    navigate(`/usuarios/view/${user.id}`);
   };
 
   const handleCreateNew = () => {
-    setSelectedUser(undefined); // Resetear usuario seleccionado
-    setIsModalOpen(true);
+    navigate('/usuarios/create');
   };
 
   const handleEdit = (user: User) => {
-    // Mapear User a Usuario para pasarlo al modal
-    const usuarioToEdit: Usuario = {
-      id: user.id,
-      nombre: user.nombre,
-      correo: user.correo,
-      estado: user.estadoRaw === 'Activo' ? 'activo' : 'inactivo',
-      ultimoAcceso: user.ultimoAcceso,
-      nombreRol: user.rol,
-      idRol: user.idRol,
-    };
-    setSelectedUser(usuarioToEdit);
-    setIsModalOpen(true);
-  };
-
-  const handleEditFromView = (usuarioDetalle: UsuarioDetalle) => {
-    // Convertir UsuarioDetalle a Usuario para el modal de edición
-    const usuarioToEdit: Usuario = {
-      id: usuarioDetalle.id,
-      nombre: usuarioDetalle.nombre,
-      correo: usuarioDetalle.correo,
-      estado: usuarioDetalle.estado,
-      ultimoAcceso: usuarioDetalle.ultimoLogin,
-      nombreRol: usuarioDetalle.nombreRol,
-      idRol: usuarioDetalle.idRol,
-    };
-
-    // Cerrar el modal de vista
-    setIsViewModalOpen(false);
-    setViewUserId(null);
-
-    // Abrir el modal de edición con los datos del usuario
-    setSelectedUser(usuarioToEdit);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedUser(undefined); // Resetear usuario seleccionado al cerrar
-  };
-
-  const handleUserCreated = () => {
-    // Incrementar el trigger para refrescar la tabla
-    setRefreshTrigger(prev => prev + 1);
+    navigate(`/usuarios/edit/${user.id}`);
   };
 
   return (
-    <>
-      <PaginatedDataTable
-        title="Gestión de Usuarios"
-        columns={columns}
-        fetchDataFunction={fetchUsers}
-        onRowClick={handleView}
-        onCreateNew={handleCreateNew}
-        onEdit={handleEdit}
-        onView={handleView}
-        statusOptions={statusOptions}
-        refreshTrigger={refreshTrigger}
-      />
-
-      <CreateUserModal
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onSuccess={handleUserCreated}
-        user={selectedUser}
-      />
-
-      <ViewUserModal
-        isOpen={isViewModalOpen}
-        onClose={handleViewModalClose}
-        userId={viewUserId}
-        onEdit={handleEditFromView}
-      />
-    </>
+    <PaginatedDataTable
+      title="Gestión de Usuarios"
+      columns={columns}
+      fetchDataFunction={fetchUsers}
+      onRowClick={handleView}
+      onCreateNew={handleCreateNew}
+      onEdit={handleEdit}
+      onView={handleView}
+      statusOptions={statusOptions}
+      refreshTrigger={refreshTrigger}
+    />
   );
 };

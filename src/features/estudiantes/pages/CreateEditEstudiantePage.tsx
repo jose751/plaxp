@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaExclamationCircle, FaSave, FaGraduationCap, FaCheckCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaExclamationCircle, FaSave, FaGraduationCap, FaCheckCircle, FaCamera } from 'react-icons/fa';
+import { HiX } from 'react-icons/hi';
 import { CgSpinner } from 'react-icons/cg';
 import { crearEstudianteApi, actualizarEstudianteApi, obtenerEstudiantePorIdApi } from '../api/estudiantesApi';
 import type { CrearEstudianteData, Estudiante } from '../types/estudiante.types';
 import { CredentialsScreen } from '../components';
 import { LoadingOverlay } from '../../../shared/components/LoadingOverlay';
+import { SucursalSelect } from '../../sucursales';
 
 export const CreateEditEstudiantePage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ export const CreateEditEstudiantePage: React.FC = () => {
     contrasenaTemporal: '',
     identificacion: '',
     direccion: '',
+    idSucursal: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -33,6 +36,13 @@ export const CreateEditEstudiantePage: React.FC = () => {
   const [showCredentials, setShowCredentials] = useState(false);
   const [createdStudent, setCreatedStudent] = useState<Estudiante | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('Guardando datos...');
+
+  // Estado para la foto
+  const [foto, setFoto] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [currentPathFoto, setCurrentPathFoto] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cargar estudiante si es modo edición
   useEffect(() => {
@@ -58,7 +68,12 @@ export const CreateEditEstudiantePage: React.FC = () => {
         contrasenaTemporal: estudiante.contrasenaTemporal || '',
         identificacion: estudiante.identificacion || '',
         direccion: estudiante.direccion || '',
+        idSucursal: estudiante.idSucursal || '',
       });
+      // Cargar foto actual si existe
+      if (estudiante.pathFoto) {
+        setCurrentPathFoto(estudiante.pathFoto);
+      }
     } catch (error) {
       console.error('Error al cargar estudiante:', error);
       setApiError('Error al cargar la información del estudiante');
@@ -101,6 +116,11 @@ export const CreateEditEstudiantePage: React.FC = () => {
           error = 'La identificación es obligatoria';
         }
         break;
+      case 'idSucursal':
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+          error = 'La sucursal es obligatoria';
+        }
+        break;
     }
 
     setErrors(prev => ({ ...prev, [name]: error }));
@@ -123,6 +143,68 @@ export const CreateEditEstudiantePage: React.FC = () => {
     validateField(name, value);
   };
 
+  // Handlers para la foto
+  const handleFotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const processFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setApiError('El archivo debe ser una imagen');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setApiError('La imagen no debe superar los 5MB');
+      return;
+    }
+    setFoto(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setApiError(null);
+  }, []);
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleRemoveFoto = () => {
+    setFoto(null);
+    setPreviewUrl(null);
+    setCurrentPathFoto(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  }, [processFile]);
+
+  // Obtener nombre completo para el avatar
+  const getNombreCompleto = () => {
+    return `${formData.nombre} ${formData.primerApellido}`.trim() || 'E';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError(null);
@@ -131,8 +213,9 @@ export const CreateEditEstudiantePage: React.FC = () => {
     const primerApellidoValid = validateField('primerApellido', formData.primerApellido);
     const correoValid = validateField('correo', formData.correo);
     const identificacionValid = validateField('identificacion', formData.identificacion);
+    const sucursalValid = validateField('idSucursal', formData.idSucursal);
 
-    const allValid = nombreValid && primerApellidoValid && correoValid && identificacionValid;
+    const allValid = nombreValid && primerApellidoValid && correoValid && identificacionValid && sucursalValid;
 
     if (!allValid) {
       return;
@@ -156,9 +239,10 @@ export const CreateEditEstudiantePage: React.FC = () => {
           nombreUsuario: formData.nombreUsuario || undefined,
           identificacion: formData.identificacion,
           direccion: formData.direccion || undefined,
+          idSucursal: formData.idSucursal,
         };
 
-        response = await actualizarEstudianteApi(id, updateData);
+        response = await actualizarEstudianteApi(id, updateData, foto || undefined);
       } else {
         setLoadingMessage('Creando estudiante...');
 
@@ -173,9 +257,10 @@ export const CreateEditEstudiantePage: React.FC = () => {
           contrasenaTemporal: formData.contrasenaTemporal || undefined,
           identificacion: formData.identificacion,
           direccion: formData.direccion || undefined,
+          idSucursal: formData.idSucursal,
         };
 
-        response = await crearEstudianteApi(createData);
+        response = await crearEstudianteApi(createData, foto || undefined);
       }
 
       if (response.success) {
@@ -272,12 +357,89 @@ export const CreateEditEstudiantePage: React.FC = () => {
             </div>
           )}
 
-          {/* Datos Personales */}
-          
-          <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-100 dark:border-dark-border p-4 md:p-6 shadow-md">
-            <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Datos Personales</h2>
+          {/* Input oculto para foto */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFotoChange}
+            className="hidden"
+          />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+          {/* Datos Personales con foto integrada */}
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-100 dark:border-dark-border shadow-md overflow-hidden">
+            {/* Header con foto */}
+            <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/50 dark:from-indigo-900/20 dark:to-indigo-800/10 px-4 md:px-6 py-5 border-b border-indigo-100 dark:border-indigo-900/30">
+              <div className="flex items-center gap-5">
+                {/* Avatar con zona de drop */}
+                <div
+                  className={`relative group flex-shrink-0 ${isDragging ? 'scale-105' : ''} transition-transform`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div
+                    onClick={handleFotoClick}
+                    className={`relative w-24 h-24 rounded-full cursor-pointer overflow-hidden ${
+                      isDragging
+                        ? 'ring-4 ring-indigo-400 ring-offset-2 dark:ring-offset-dark-card'
+                        : 'ring-4 ring-white dark:ring-dark-card shadow-lg'
+                    } transition-all`}
+                  >
+                    {previewUrl ? (
+                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : currentPathFoto ? (
+                      <img src={currentPathFoto} alt="Foto actual" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
+                        <span className="text-white text-3xl font-semibold">
+                          {getNombreCompleto().charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${
+                      isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}>
+                      <FaCamera className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  {(previewUrl || currentPathFoto) && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveFoto}
+                      disabled={loading}
+                      className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-colors disabled:opacity-50"
+                      title="Eliminar foto"
+                    >
+                      <HiX className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
+                    {isEditMode ? 'Editar estudiante' : 'Nuevo estudiante'}
+                  </h3>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                    JPG, PNG o WebP • Máx. 5MB
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleFotoClick}
+                    disabled={loading}
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-dark-bg border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    <FaCamera className="w-4 h-4" />
+                    {(previewUrl || currentPathFoto) ? 'Cambiar foto' : 'Subir foto'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Campos del formulario */}
+            <div className="p-4 md:p-6">
+              <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Datos Personales</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {/* Nombre */}
               <div>
                 <label htmlFor="nombre" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
@@ -393,6 +555,23 @@ export const CreateEditEstudiantePage: React.FC = () => {
                     {errors.identificacion}
                   </p>
                 )}
+              </div>
+
+              {/* Sucursal */}
+              <div>
+                <SucursalSelect
+                  value={formData.idSucursal}
+                  onChange={(value) => {
+                    setFormData(prev => ({ ...prev, idSucursal: value }));
+                    validateField('idSucursal', value);
+                  }}
+                  error={errors.idSucursal}
+                  disabled={loading}
+                  required
+                  label="Sucursal"
+                  placeholder="Seleccionar sucursal"
+                />
+              </div>
               </div>
             </div>
           </div>

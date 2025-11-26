@@ -44,26 +44,43 @@ export const BenefitsSection: React.FC = () => {
 
   return (
     <section id="beneficios" className="section-padding bg-[#000000] scroll-mt-16 relative overflow-hidden">
-      {/* Background decorative elements */}
+      {/* Background decorative elements - Optimized */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 -left-48 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-glow-soft will-change-transform" />
+        <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-glow-soft will-change-transform" style={{ animationDelay: '3s' }} />
       </div>
 
       <div className="container-custom px-4 sm:px-6 relative">
         {/* Section Header */}
         <div
           ref={headerRef}
-          className={`max-w-3xl mx-auto text-center mb-16 md:mb-20 transition-all duration-1000 ${
-            headerInView
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 translate-y-8'
-          }`}
+          className="max-w-3xl mx-auto text-center mb-16 md:mb-20"
         >
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-5 md:mb-6 tracking-tight">
-            ¿Por qué elegir <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">Plaxp</span>?
+          <h2
+            className={`text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-5 md:mb-6 tracking-tight transition-all duration-1000 ${
+              headerInView
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-8'
+            }`}
+            style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+          >
+            ¿Por qué elegir{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">
+              Plaxp
+            </span>
+            ?
           </h2>
-          <p className="text-lg sm:text-xl text-neutral-400 leading-relaxed">
+          <p
+            className={`text-lg sm:text-xl text-neutral-400 leading-relaxed transition-all duration-1000 ${
+              headerInView
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-8'
+            }`}
+            style={{
+              transitionDelay: '150ms',
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
             Una plataforma diseñada para instituciones modernas
           </p>
         </div>
@@ -73,34 +90,37 @@ export const BenefitsSection: React.FC = () => {
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className={`group relative transition-all duration-700`}
+              className="group relative will-change-transform"
               style={{
+                transition: 'opacity 800ms cubic-bezier(0.16, 1, 0.3, 1), transform 800ms cubic-bezier(0.16, 1, 0.3, 1)',
                 transitionDelay: `${index * 150}ms`,
                 opacity: cardsInView ? 1 : 0,
                 transform: cardsInView
                   ? 'translateY(0) scale(1)'
-                  : 'translateY(30px) scale(0.95)',
+                  : 'translateY(40px) scale(0.95)',
               }}
             >
-              {/* Glow background effect */}
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl transition-all duration-500"></div>
+              {/* Glow background effect - Optimized */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 will-change-opacity" />
 
               {/* Card */}
-              <div className="relative h-full bg-gradient-to-br from-neutral-800/60 via-neutral-800/40 to-neutral-900/60 backdrop-blur-xl rounded-2xl p-8 border border-neutral-700/50 group-hover:border-primary/50 transition-all duration-500 shadow-xl shadow-black/20 group-hover:shadow-2xl group-hover:shadow-primary/10 group-hover:-translate-y-1">
+              <div className="relative h-full bg-gradient-to-br from-neutral-800/60 via-neutral-800/40 to-neutral-900/60 backdrop-blur-xl rounded-2xl p-8 border border-neutral-700/50 group-hover:border-primary/50 transition-all duration-500 shadow-xl shadow-black/20 group-hover:shadow-2xl group-hover:shadow-primary/10 group-hover:-translate-y-2">
                 {/* Inner glow effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/0 via-transparent to-purple-500/0 group-hover:from-primary/10 group-hover:to-purple-500/10 transition-all duration-500"></div>
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/0 via-transparent to-purple-500/0 group-hover:from-primary/10 group-hover:to-purple-500/10 transition-all duration-500" />
 
-                {/* Shine effect on hover */}
-                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                {/* Shine effect on hover - Optimized */}
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                  {/* Moving shine */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
                 </div>
 
                 {/* Content */}
                 <div className="relative space-y-5">
                   {/* Icon */}
                   <div className="relative inline-flex">
-                    <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg group-hover:bg-primary/30 transition-all duration-300"></div>
-                    <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-purple-600/20 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:border-primary/40 group-hover:from-primary/30 group-hover:to-purple-600/30 transition-all duration-300 shadow-lg shadow-primary/10">
+                    <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg group-hover:bg-primary/30 transition-all duration-500 group-hover:scale-110" />
+                    <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-purple-600/20 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:border-primary/40 group-hover:from-primary/30 group-hover:to-purple-600/30 transition-all duration-500 shadow-lg shadow-primary/10">
                       {benefit.icon}
                     </div>
                   </div>

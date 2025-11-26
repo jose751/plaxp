@@ -64,6 +64,10 @@ export const listarEstudiantesApi = async (
     queryParams.requiereFacturaElectronica = params.requiereFacturaElectronica;
   }
 
+  if (params?.idSucursal) {
+    queryParams.idSucursal = params.idSucursal;
+  }
+
   return await apiService.get<ListarEstudiantesResponse>(
     'estudiantes',
     queryParams
@@ -74,22 +78,30 @@ export const listarEstudiantesApi = async (
  * Crear un nuevo estudiante
  * POST /api/estudiantes
  *
- * Integración automática con Moodle:
- * - El username se genera automáticamente si no se proporciona
- * - Se genera una contraseña temporal segura automáticamente
- * - El usuario se crea en Moodle automáticamente
- * - Se guarda el ID de Moodle en el registro del estudiante
- *
- * Campos de Hacienda CR:
- * Si requiereFacturaElectronica=true, los campos de identificación y ubicación son obligatorios.
+ * Se envía como multipart/form-data para soportar fotos.
  */
 export const crearEstudianteApi = async (
-  data: CrearEstudianteData
+  data: CrearEstudianteData,
+  foto?: File
 ): Promise<CrearEstudianteResponse> => {
-  return await apiService.post<CrearEstudianteResponse>(
-    'estudiantes',
-    data
-  );
+  const formData = new FormData();
+  formData.append('nombre', data.nombre);
+  formData.append('primerApellido', data.primerApellido);
+  if (data.segundoApellido) formData.append('segundoApellido', data.segundoApellido);
+  formData.append('correo', data.correo);
+  if (data.telefono) formData.append('telefono', data.telefono);
+  if (data.fechaNacimiento) formData.append('fechaNacimiento', data.fechaNacimiento);
+  if (data.nombreUsuario) formData.append('nombreUsuario', data.nombreUsuario);
+  if (data.contrasenaTemporal) formData.append('contrasenaTemporal', data.contrasenaTemporal);
+  formData.append('identificacion', data.identificacion);
+  if (data.direccion) formData.append('direccion', data.direccion);
+  formData.append('idSucursal', data.idSucursal);
+
+  if (foto) {
+    formData.append('foto', foto);
+  }
+
+  return await apiService.upload<CrearEstudianteResponse>('estudiantes', formData);
 };
 
 /**
@@ -112,17 +124,32 @@ export const obtenerEstudiantePorIdApi = async (
  * Actualizar un estudiante existente
  * PUT /api/estudiantes/{id}
  *
- * Todos los campos son opcionales.
- * Solo se actualizan los campos proporcionados.
+ * Se envía como multipart/form-data para soportar fotos.
  */
 export const actualizarEstudianteApi = async (
   id: string,
-  data: ActualizarEstudianteData
+  data: ActualizarEstudianteData,
+  foto?: File
 ): Promise<ActualizarEstudianteResponse> => {
-  return await apiService.put<ActualizarEstudianteResponse>(
-    `estudiantes/${id}`,
-    data
-  );
+  const formData = new FormData();
+  if (data.nombre) formData.append('nombre', data.nombre);
+  if (data.primerApellido) formData.append('primerApellido', data.primerApellido);
+  if (data.segundoApellido) formData.append('segundoApellido', data.segundoApellido);
+  if (data.correo) formData.append('correo', data.correo);
+  if (data.telefono) formData.append('telefono', data.telefono);
+  if (data.fechaNacimiento) formData.append('fechaNacimiento', data.fechaNacimiento);
+  if (data.nombreUsuario) formData.append('nombreUsuario', data.nombreUsuario);
+  if (data.idMoodle) formData.append('idMoodle', data.idMoodle);
+  if (data.identificacion) formData.append('identificacion', data.identificacion);
+  if (data.direccion) formData.append('direccion', data.direccion);
+  if (data.estado !== undefined) formData.append('estado', String(data.estado));
+  if (data.idSucursal) formData.append('idSucursal', data.idSucursal);
+
+  if (foto) {
+    formData.append('foto', foto);
+  }
+
+  return await apiService.uploadPut<ActualizarEstudianteResponse>(`estudiantes/${id}`, formData);
 };
 
 /**

@@ -130,7 +130,7 @@ export const TeamSection: React.FC = () => {
             <div className="relative w-12 h-12 md:w-14 md:h-14">
               <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-500 rounded-full opacity-10 group-hover:opacity-40 blur-sm transition-opacity duration-300"></div>
               <div className="relative w-full h-full bg-neutral-900/80 backdrop-blur-xl border border-neutral-700/50 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-neutral-300 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-neutral-300/30 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                 </svg>
               </div>
@@ -145,7 +145,7 @@ export const TeamSection: React.FC = () => {
             <div className="relative w-12 h-12 md:w-14 md:h-14">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-10 group-hover:opacity-40 blur-sm transition-opacity duration-300"></div>
               <div className="relative w-full h-full bg-neutral-900/80 backdrop-blur-xl border border-neutral-700/50 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-neutral-300 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-neutral-300/30 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </div>

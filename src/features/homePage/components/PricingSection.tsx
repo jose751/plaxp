@@ -91,7 +91,7 @@ export const PricingSection: React.FC = () => {
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-white mb-1"> {/* Se reduce tamaño de texto y margen */}
-                  Prueba gratis por 30 días
+                  Prueba gratis por 2 meses
                 </h3>
                 <p className="text-sm text-neutral-300"> {/* Se reduce tamaño de texto */}
                   Sin tarjeta de crédito. Sin compromiso. Cancela cuando quieras.

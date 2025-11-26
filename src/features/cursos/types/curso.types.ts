@@ -31,6 +31,7 @@ export interface ListarCursosParams {
   q?: string;
   estado?: 'activo' | 'inactivo' | 'todos';
   categoriaId?: string;
+  idSucursal?: string; // Filtrar por sucursal
 }
 
 /**

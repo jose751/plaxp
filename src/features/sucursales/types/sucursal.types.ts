@@ -20,12 +20,10 @@ export interface Sucursal {
  * Información de paginación
  */
 export interface SucursalPaginationInfo {
-  limit: any;
-  total: any;
+  total: number;
   page: number;
-  pageSize: number;
+  limit: number;
   totalPages: number;
-  totalRecords: number;
 }
 
 /**

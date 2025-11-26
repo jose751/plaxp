@@ -26,6 +26,7 @@ export const listarProfesoresApi = async (
   if (params.identificacion) queryParams.append('identificacion', params.identificacion);
   if (params.idMoodle) queryParams.append('idMoodle', params.idMoodle);
   if (params.estado !== undefined) queryParams.append('estado', params.estado.toString());
+  if (params.idSucursal) queryParams.append('idSucursal', params.idSucursal);
 
   const url = `profesores${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 

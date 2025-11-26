@@ -21,6 +21,7 @@ export interface Estudiante {
   direccion?: string;
   estado: boolean;
   idSucursal?: string; // Sucursal principal (único campo de sucursal para estudiantes)
+  pathFoto?: string | null; // Ruta de la foto del estudiante
   creadoEn: string;
   modificadoEn: string;
 }
@@ -62,6 +63,7 @@ export interface ListarEstudiantesParams {
   idMoodle?: string;
   estado?: boolean;
   requiereFacturaElectronica?: boolean;
+  idSucursal?: string; // Filtrar por sucursal
 }
 
 /**

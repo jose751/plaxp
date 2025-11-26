@@ -13,4 +13,11 @@
   background: linear-gradient(135deg, #7e57e2ff 0%, rgb(71, 50, 126) 100%);
 }
 
+/* Shimmer animation para loading states */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 

@@ -43,7 +43,7 @@ export const HeroSection: React.FC = () => {
               style={{
                 opacity: 0,
                 filter: 'blur(4px)',
-                animation: 'soft-fade-blur 1.2s ease-out 0.25s forwards'
+                animation: 'soft-fade-blur 0.5s ease-out 0.25s forwards'
               }}
             >
               Simplifica la gestión de tu
@@ -53,7 +53,7 @@ export const HeroSection: React.FC = () => {
               style={{
                 opacity: 0,
                 filter: 'blur(4px)',
-                animation: 'soft-fade-blur 1.2s ease-out 0.4s forwards',
+                animation: 'soft-fade-blur 0.5s ease-out 0.4s forwards',
                 backgroundSize: '200% 100%'
               }}
             >
@@ -67,7 +67,7 @@ export const HeroSection: React.FC = () => {
             style={{
               opacity: 0,
               filter: 'blur(4px)',
-              animation: 'soft-fade-blur 1.2s ease-out 0.55s forwards'
+              animation: 'soft-fade-blur 0.5s ease-out 0.55s forwards'
             }}
           >
             Plaxp unifica la gestión administrativa, académica y financiera de tu institución en una sola plataforma inteligente.
@@ -79,7 +79,7 @@ export const HeroSection: React.FC = () => {
             style={{
               opacity: 0,
               filter: 'blur(2px)',
-              animation: 'soft-fade-blur 1.2s ease-out 0.7s forwards'
+              animation: 'soft-fade-blur 0.5s ease-out 0.7s forwards'
             }}
           >
             <Link

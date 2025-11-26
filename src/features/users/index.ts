@@ -3,8 +3,8 @@
  */
 
 export { UsersPage } from './pages/UsersPage';
-export { CreateUserModal } from './components/CreateUserModal';
-export { ViewUserModal } from './components/ViewUserModal';
+export { CreateEditUserPage } from './pages/CreateEditUserPage';
+export { ViewUserPage } from './pages/ViewUserPage';
 export { RoleSelect } from './components/RoleSelect';
 export * from './types/user.types';
 export * from './api/UsersApi';

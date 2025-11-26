@@ -74,6 +74,7 @@ export interface ListarProfesoresParams {
   identificacion?: string;
   idMoodle?: string;
   estado?: boolean;
+  idSucursal?: string; // Filtrar por sucursal
 }
 
 /**

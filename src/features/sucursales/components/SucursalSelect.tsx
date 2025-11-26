@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaBuilding, FaExclamationTriangle } from 'react-icons/fa';
+import { FaExclamationCircle } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerTodasSucursalesApi } from '../api/sucursalesApi';
 import type { Sucursal } from '../types/sucursal.types';
@@ -54,14 +54,14 @@ export const SucursalSelect: React.FC<SucursalSelectProps> = ({
 
   if (loading) {
     return (
-      <div className="w-full">
-        <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
-        <div className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-300 dark:border-dark-border rounded-lg flex items-center justify-center gap-2">
+        <div className="w-full px-3 py-2 bg-neutral-50 dark:bg-dark-bg border border-neutral-300 dark:border-dark-border rounded-lg flex items-center justify-center gap-2">
           <CgSpinner className="w-4 h-4 animate-spin text-neutral-500" />
-          <span className="text-sm text-neutral-500 dark:text-neutral-400">Cargando sucursales...</span>
+          <span className="text-sm text-neutral-500 dark:text-neutral-400">Cargando...</span>
         </div>
       </div>
     );
@@ -69,13 +69,13 @@ export const SucursalSelect: React.FC<SucursalSelectProps> = ({
 
   if (loadError) {
     return (
-      <div className="w-full">
-        <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
-        <div className="w-full px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-lg flex items-center gap-2">
-          <FaExclamationTriangle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+        <div className="w-full px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-lg flex items-center gap-2">
+          <FaExclamationCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
           <span className="text-sm text-red-600 dark:text-red-400">{loadError}</span>
         </div>
       </div>
@@ -83,26 +83,23 @@ export const SucursalSelect: React.FC<SucursalSelectProps> = ({
   }
 
   return (
-    <div className="w-full">
-      <label htmlFor="sucursal-select" className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+    <div>
+      <label htmlFor="sucursal-select" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <FaBuilding className="w-4 h-4 text-neutral-400" />
-        </div>
         <select
           id="sucursal-select"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           disabled={disabled}
-          className={`w-full pl-10 pr-10 py-3 bg-white dark:bg-dark-bg border ${
+          className={`w-full px-3 py-2 bg-white dark:bg-dark-bg border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all text-neutral-900 dark:text-neutral-100 disabled:bg-neutral-50 dark:disabled:bg-neutral-700/50 disabled:cursor-not-allowed appearance-none pr-8 ${
             error
-              ? 'border-red-500 dark:border-red-500 focus:ring-red-500/30 focus:border-red-500'
-              : 'border-neutral-300 dark:border-dark-border focus:ring-cyan-500/30 focus:border-cyan-500'
-          } rounded-lg focus:outline-none focus:ring-2 transition-all text-neutral-900 dark:text-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed appearance-none`}
+              ? 'border-red-300 dark:border-red-600 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-100 dark:focus:ring-red-900/50'
+              : 'border-neutral-300 dark:border-dark-border focus:border-neutral-400 dark:focus:border-neutral-600 focus:ring-neutral-100 dark:focus:ring-neutral-800'
+          }`}
         >
           <option value="">{placeholder}</option>
           {sucursales.map((sucursal) => (
@@ -118,8 +115,8 @@ export const SucursalSelect: React.FC<SucursalSelectProps> = ({
         </div>
       </div>
       {error && (
-        <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-          <FaExclamationTriangle className="w-3 h-3" />
+        <p className="text-xs text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+          <FaExclamationCircle className="w-3 h-3" />
           {error}
         </p>
       )}

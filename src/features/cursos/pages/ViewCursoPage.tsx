@@ -11,18 +11,22 @@ import {
   FaLink,
   FaHashtag,
   FaCalendarAlt,
+  FaBuilding,
 } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerCursoPorIdApi } from '../api/cursosApi';
 import { obtenerCategoriaPorIdApi } from '../../categorias/api/categoriasApi';
+import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Curso } from '../types/curso.types';
 import type { Categoria } from '../../categorias/types/categoria.types';
+import type { Sucursal } from '../../sucursales/types/sucursal.types';
 
 export const ViewCursoPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [curso, setCurso] = useState<Curso | null>(null);
   const [categoria, setCategoria] = useState<Categoria | null>(null);
+  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,13 +43,22 @@ export const ViewCursoPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await obtenerCursoPorIdApi(id);
-      setCurso(response.data);
+      // Cargar curso y sucursales en paralelo
+      const [cursoResponse, sucursalesResponse] = await Promise.all([
+        obtenerCursoPorIdApi(id),
+        obtenerTodasSucursalesApi(),
+      ]);
+
+      setCurso(cursoResponse.data);
+
+      if (sucursalesResponse.success) {
+        setSucursales(sucursalesResponse.data);
+      }
 
       // Cargar la categoría
-      if (response.data.categoriaId) {
+      if (cursoResponse.data.categoriaId) {
         try {
-          const catResponse = await obtenerCategoriaPorIdApi(response.data.categoriaId);
+          const catResponse = await obtenerCategoriaPorIdApi(cursoResponse.data.categoriaId);
           setCategoria(catResponse.data);
         } catch (catErr) {
           console.error('Error al cargar categoría:', catErr);
@@ -57,6 +70,13 @@ export const ViewCursoPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función para obtener el nombre de la sucursal por ID
+  const getSucursalNombre = (sucursalId?: string): string => {
+    if (!sucursalId) return 'N/A';
+    const sucursal = sucursales.find(s => s.id === sucursalId);
+    return sucursal?.nombre || sucursalId;
   };
 
   const formatDate = (dateString?: string) => {
@@ -211,6 +231,16 @@ export const ViewCursoPage: React.FC = () => {
               <div className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
                 <FaLayerGroup className="w-4 h-4 text-neutral-400 dark:text-neutral-500 flex-shrink-0" />
                 <span className="text-sm">{categoria ? categoria.nombre : 'Cargando...'}</span>
+              </div>
+            </div>
+
+            <div className="pb-3 md:pb-0 border-b md:border-b-0 border-neutral-200 dark:border-dark-border">
+              <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide block mb-2">
+                Sucursal
+              </label>
+              <div className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+                <FaBuilding className="w-4 h-4 text-neutral-400 dark:text-neutral-500 flex-shrink-0" />
+                <span className="text-sm">{getSucursalNombre(curso.idSucursal)}</span>
               </div>
             </div>
 

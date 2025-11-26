@@ -2,7 +2,12 @@ import React from 'react';
 import { useInView } from 'react-intersection-observer';
 
 export const MobileCampusSection: React.FC = () => {
-  const { ref, inView } = useInView({
+  const { ref: sectionRef, inView: sectionInView } = useInView({
+    triggerOnce: true,
+    threshold: 0.15,
+  });
+
+  const { ref: imageRef, inView: imageInView } = useInView({
     triggerOnce: true,
     threshold: 0.2,
   });
@@ -38,22 +43,45 @@ export const MobileCampusSection: React.FC = () => {
   ];
 
   return (
-    <section className="section-padding bg-[#111111] px-4 sm:px-6 lg:px-12">
-      <div className="w-full">
-        <div ref={ref} className="max-w-[1400px] mx-auto">
+    <section className="section-padding bg-[#111111] px-4 sm:px-6 lg:px-12 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[150px] animate-glow-soft will-change-transform" />
+        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-purple-500/3 rounded-full blur-[120px] animate-glow-soft will-change-transform" style={{ animationDelay: '3s' }} />
+      </div>
+
+      <div className="w-full relative z-10">
+        <div ref={sectionRef} className="max-w-[1400px] mx-auto">
           {/* Grid Layout */}
           <div className="grid lg:grid-cols-2 gap-8 md:gap-16 items-center">
             {/* Content */}
-            <div className={`space-y-8 ${inView ? 'animate-slide-up' : 'opacity-0'}`}>
+            <div className="space-y-8">
               {/* Title */}
               <div>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6 leading-tight">
+                <h2
+                  className={`text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6 leading-tight transition-all duration-1000 ${
+                    sectionInView
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-8'
+                  }`}
+                  style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+                >
                   Campus{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">
                     Virtual
                   </span>
                 </h2>
-                <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                <p
+                  className={`text-base sm:text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed transition-all duration-1000 ${
+                    sectionInView
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-8'
+                  }`}
+                  style={{
+                    transitionDelay: '150ms',
+                    transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
                   Lleva tu aprendizaje a donde estés. Nuestra plataforma ofrece contenido dinámico,
                   accesible y optimizado para dispositivos iOS y Android. Aprende de forma flexible,
                   con materiales claros, actividades interactivas y módulos diseñados para estudiar
@@ -66,10 +94,17 @@ export const MobileCampusSection: React.FC = () => {
                 {steps.map((step, index) => (
                   <div
                     key={index}
-                    className={`bg-primary/5 dark:bg-primary/10 rounded-2xl p-6 ${inView ? 'animate-fade-in' : 'opacity-0'}`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    className={`group bg-primary/5 dark:bg-primary/10 rounded-2xl p-6 transition-all duration-700 hover:bg-primary/10 dark:hover:bg-primary/20 hover:-translate-y-1 ${
+                      sectionInView
+                        ? 'opacity-100 translate-y-0 scale-100'
+                        : 'opacity-0 translate-y-8 scale-95'
+                    }`}
+                    style={{
+                      transitionDelay: `${300 + index * 100}ms`,
+                      transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
                   >
-                    <div className="flex items-center justify-center w-12 h-12 bg-primary rounded-xl mb-4 text-white">
+                    <div className="flex items-center justify-center w-12 h-12 bg-primary rounded-xl mb-4 text-white transition-transform duration-300 group-hover:scale-110">
                       {step.icon}
                     </div>
                     <p className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -81,14 +116,28 @@ export const MobileCampusSection: React.FC = () => {
             </div>
 
             {/* Mobile Mockup Image */}
-            <div className={`relative ${inView ? 'animate-slide-up' : 'opacity-0'} lg:order-last`} style={{ animationDelay: '0.2s' }}>
+            <div
+              ref={imageRef}
+              className={`relative lg:order-last transition-all duration-1000 ${
+                imageInView
+                  ? 'opacity-100 translate-x-0 scale-100'
+                  : 'opacity-0 translate-x-12 scale-95'
+              }`}
+              style={{
+                transitionDelay: '200ms',
+                transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
               <div className="relative">
-                {/* Image Container */}
-                <div className="relative">
+                {/* Glow effect behind image */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full blur-3xl opacity-50 animate-glow-soft will-change-transform" />
+
+                {/* Image Container with Float Animation */}
+                <div className="relative animate-float-slow will-change-transform">
                   <img
                     src="home-page/mockup-moodle.png"
                     alt="Campus Virtual Móvil - Mockup"
-                    className="w-full h-auto max-w-xlg mx-auto drop-shadow-2xl"
+                    className="w-full h-auto max-w-xlg mx-auto drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
                   />
                 </div>
               </div>

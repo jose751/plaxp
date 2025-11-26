@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { FaEdit, FaTrash, FaEye, FaSearch, FaPlus, FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaEdit, FaEye, FaSearch, FaPlus, FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import { CgSpinner } from "react-icons/cg";
 import React from 'react';
 
@@ -52,51 +52,70 @@ const PaginatedCardList = <T extends BaseItem>({ data, columns, onRowClick, onEd
     onEdit?: (item: T) => void;
     onView?: (item: T) => void;
 }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="space-y-4">
+        {data.map((item) => {
+            const [firstCol, ...restCols] = columns;
 
-        {data.map((item) => (
-            <div
-                key={item.id}
-                className="group bg-gradient-to-br from-white to-neutral-50 dark:from-dark-card dark:to-dark-bg rounded-2xl shadow-lg p-4 border border-neutral-200/50 dark:border-dark-border hover:shadow-2xl hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] cursor-pointer backdrop-blur-sm"
-                onClick={() => onRowClick(item)}
-            >
-                <div className="space-y-2.5">
-                    {columns.map((col) => (
-                        <div key={String(col.key)} className="flex items-start space-x-2">
-                            <span className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide min-w-[70px]">{col.header}:</span>
-                            <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-primary transition-colors duration-300">{item[col.key] as React.ReactNode}</span>
+            return (
+                <div
+                    key={item.id}
+                    className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-neutral-200 dark:border-dark-border hover:shadow-lg hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-200 cursor-pointer overflow-hidden"
+                    onClick={() => onRowClick(item)}
+                >
+                    {/* Línea morada superior */}
+                    <div className="h-1 bg-gradient-to-r from-purple-500 to-purple-400"></div>
+
+                    {/* Header */}
+                    <div className="px-5 py-4 border-b border-neutral-100 dark:border-dark-border">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                                {firstCol && (
+                                    <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                        {item[firstCol.key] as React.ReactNode}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                {onView && (
+                                    <button
+                                        className="p-2.5 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
+                                        aria-label="Ver"
+                                        onClick={(e) => { e.stopPropagation(); onView(item); }}
+                                    >
+                                        <FaEye size={16} />
+                                    </button>
+                                )}
+                                {onEdit && (
+                                    <button
+                                        className="p-2.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                        aria-label="Editar"
+                                        onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                                    >
+                                        <FaEdit size={16} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    ))}
-                    <div className="flex justify-end pt-2 space-x-2 border-t border-neutral-200/50 dark:border-dark-border">
-                        {onView && (
-                            <button
-                                className="text-primary hover:text-purple-700 transform hover:scale-110 transition-all duration-200 p-1"
-                                aria-label="View Details"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onView(item);
-                                }}
-                            >
-                                <FaEye size={16} />
-                            </button>
-                        )}
-                        {onEdit && (
-                            <button
-                                className="text-info hover:text-blue-700 transform hover:scale-110 transition-all duration-200 p-1"
-                                aria-label="Edit"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit(item);
-                                }}
-                            >
-                                <FaEdit size={16} />
-                            </button>
-                        )}
-                        <button className="text-danger hover:text-red-700 transform hover:scale-110 transition-all duration-200 p-1" aria-label="Delete"><FaTrash size={16} /></button>
+                    </div>
+
+                    {/* Contenido: Campos en filas */}
+                    <div className="px-5 py-4">
+                        <div className="space-y-4">
+                            {restCols.map((col) => (
+                                <div key={String(col.key)} className="flex flex-col">
+                                    <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-wide mb-1.5">
+                                        {col.header}
+                                    </span>
+                                    <div className="text-sm text-neutral-800 dark:text-neutral-200">
+                                        {item[col.key] as React.ReactNode}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-        ))}
+            );
+        })}
     </div>
 );
 

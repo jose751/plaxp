@@ -1,42 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaUser, FaClock, FaCheckCircle, FaTimesCircle, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaGraduationCap, FaKey, FaEdit } from 'react-icons/fa';
+import { FaArrowLeft, FaUser, FaClock, FaCheckCircle, FaTimesCircle, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaGraduationCap, FaKey, FaEdit, FaBuilding } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerEstudiantePorIdApi } from '../api/estudiantesApi';
+import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Estudiante } from '../types/estudiante.types';
+import type { Sucursal } from '../../sucursales/types/sucursal.types';
+import { UserAvatar } from '../../users/components/UserAvatar';
 
 export const ViewEstudiantePage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [estudiante, setEstudiante] = useState<Estudiante | null>(null);
+  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
-      fetchEstudianteDetails();
+      fetchData();
     }
   }, [id]);
 
-  const fetchEstudianteDetails = async () => {
+  const fetchData = async () => {
     if (!id) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await obtenerEstudiantePorIdApi(id);
-      if (response.success) {
-        setEstudiante(response.data);
+      // Cargar estudiante y sucursales en paralelo
+      const [estudianteResponse, sucursalesResponse] = await Promise.all([
+        obtenerEstudiantePorIdApi(id),
+        obtenerTodasSucursalesApi(),
+      ]);
+
+      if (estudianteResponse.success) {
+        setEstudiante(estudianteResponse.data);
       } else {
         setError('Error al cargar los detalles del estudiante');
       }
+
+      if (sucursalesResponse.success) {
+        setSucursales(sucursalesResponse.data);
+      }
     } catch (err: any) {
-      console.error('Error al obtener estudiante:', err);
+      console.error('Error al obtener datos:', err);
       setError(err.message || 'Error al cargar los detalles del estudiante');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función para obtener el nombre de la sucursal por ID
+  const getSucursalNombre = (sucursalId?: string): string => {
+    if (!sucursalId) return 'N/A';
+    const sucursal = sucursales.find(s => s.id === sucursalId);
+    return sucursal?.nombre || sucursalId;
   };
 
   const formatDate = (dateString?: string) => {
@@ -117,30 +137,39 @@ export const ViewEstudiantePage: React.FC = () => {
       </div>
 
       {/* Información básica */}
-      <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-100 dark:border-dark-border p-4 md:p-6 shadow-md mb-6">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">ID:</span>
-              <span className="text-sm font-mono text-neutral-700 dark:text-neutral-300">#{estudiante.id}</span>
+      <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-100 dark:border-dark-border shadow-md mb-6 overflow-hidden">
+        {/* Header con foto */}
+        <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/50 dark:from-indigo-900/20 dark:to-indigo-800/10 px-4 md:px-6 py-5 border-b border-indigo-100 dark:border-indigo-900/30">
+          <div className="flex items-center gap-5">
+            <UserAvatar
+              nombre={`${estudiante.nombre} ${estudiante.primerApellido}`}
+              pathFoto={estudiante.pathFoto}
+              size="xl"
+              className="ring-4 ring-white dark:ring-dark-card shadow-lg"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">ID:</span>
+                <span className="text-sm font-mono text-neutral-600 dark:text-neutral-400">#{estudiante.id}</span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {estudiante.nombre} {estudiante.primerApellido} {estudiante.segundoApellido || ''}
+              </h2>
+              <div
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium mt-2 ${
+                  estudiante.estado
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                }`}
+              >
+                {estudiante.estado ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
+                {estudiante.estado ? 'Activo' : 'Inactivo'}
+              </div>
             </div>
-            <h2 className="text-xl md:text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-              {estudiante.nombre} {estudiante.primerApellido} {estudiante.segundoApellido || ''}
-            </h2>
-          </div>
-          <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium self-start ${
-              estudiante.estado
-                ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
-                : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
-            }`}
-          >
-            {estudiante.estado ? <FaCheckCircle className="w-3 h-3" /> : <FaTimesCircle className="w-3 h-3" />}
-            {estudiante.estado ? 'Activo' : 'Inactivo'}
           </div>
         </div>
 
-        <div className="pt-4 border-t border-neutral-200 dark:border-dark-border">
+        <div className="p-4 md:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             <div className="pb-3 md:pb-0 border-b md:border-b-0 border-neutral-200 dark:border-dark-border">
               <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide block mb-2">
@@ -204,6 +233,26 @@ export const ViewEstudiantePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Sucursal */}
+      {estudiante.idSucursal && (
+        <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-100 dark:border-dark-border p-4 md:p-6 shadow-md mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30">
+              <FaBuilding className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+            </div>
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">Sucursal</h3>
+          </div>
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-neutral-700 dark:text-neutral-300">Sucursal asignada:</span>
+              <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
+                {getSucursalNombre(estudiante.idSucursal)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Información de Moodle */}
       <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-100 dark:border-dark-border p-4 md:p-6 shadow-md mb-6">

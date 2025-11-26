@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import PaginatedDataTable, {
@@ -9,8 +9,10 @@ import PaginatedDataTable, {
 } from '../../../shared/components/PaginatedDataTable';
 import { listarCursosApi } from '../api/cursosApi';
 import { listarCategoriasApi } from '../../categorias/api/categoriasApi';
+import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Curso } from '../types/curso.types';
 import type { Categoria } from '../../categorias/types/categoria.types';
+import type { Sucursal } from '../../sucursales/types/sucursal.types';
 
 // Interfaz de Curso extendida para el componente
 interface CursoItem extends BaseItem {
@@ -59,6 +61,7 @@ const fetchCursos = async (
       estado: status as 'activo' | 'inactivo' | 'todos' | undefined,
       q: query || undefined,
       categoriaId: additionalFilters?.categoriaId || undefined,
+      idSucursal: additionalFilters?.idSucursal || undefined,
     });
 
     if (!response.success) {
@@ -96,7 +99,7 @@ const fetchCursos = async (
         codigo: curso.codigo,
         nombre: curso.nombre,
         nombreCorto: curso.nombreCorto,
-        categoria: 'N/A', // TODO: Obtener nombre de categoría del categoriaId
+        categoria: 'N/A',
         estado: estadoBadge,
         sincronizado: sincronizadoBadge,
         categoriaNombre: curso.categoriaNombre,
@@ -120,9 +123,11 @@ const fetchCursos = async (
 export const CursosPage = () => {
   const navigate = useNavigate();
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
+  const [loadingSucursales, setLoadingSucursales] = useState(false);
 
-  // Cargar categorías al montar el componente
+  // Cargar categorías y sucursales al montar el componente
   useEffect(() => {
     const fetchCategorias = async () => {
       setLoadingCategorias(true);
@@ -145,7 +150,22 @@ export const CursosPage = () => {
       }
     };
 
+    const fetchSucursales = async () => {
+      setLoadingSucursales(true);
+      try {
+        const response = await obtenerTodasSucursalesApi();
+        if (response.success) {
+          setSucursales(response.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar sucursales:', error);
+      } finally {
+        setLoadingSucursales(false);
+      }
+    };
+
     fetchCategorias();
+    fetchSucursales();
   }, []);
 
   const handleView = (curso: CursoItem) => {
@@ -160,32 +180,59 @@ export const CursosPage = () => {
     navigate(`/cursos/edit/${curso.id}`);
   };
 
-  // Renderizar filtro de categoría
-  const renderCategoryFilter = (filters: Record<string, any>, setFilters: (filters: Record<string, any>) => void) => {
+  // Renderizar filtros adicionales (categoría y sucursal)
+  const renderAdditionalFilters = (filters: Record<string, any>, setFilters: (filters: Record<string, any>) => void) => {
     return (
-      <div className="relative">
-        <select
-          id="category-filter"
-          value={filters.categoriaId || ''}
-          onChange={(e) => setFilters({ ...filters, categoriaId: e.target.value })}
-          className="appearance-none bg-white dark:bg-dark-bg dark:text-neutral-100 border border-neutral-300 dark:border-dark-border rounded-lg pl-4 pr-10 py-2.5 text-sm font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer transition-all shadow-md hover:shadow-lg hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={loadingCategorias}
-        >
-          <option value="">Todas las Categorías</option>
-          {categorias.map((categoria) => (
-            <option key={categoria.id} value={categoria.id}>
-              {categoria.nivel > 1 && '— '.repeat(categoria.nivel - 1)}
-              {categoria.nombre}
-            </option>
-          ))}
-        </select>
-        {/* Icono de flecha personalizado */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+      <>
+        {/* Filtro de Sucursal */}
+        <div className="relative">
+          <select
+            id="sucursal-filter"
+            value={filters.idSucursal || ''}
+            onChange={(e) => setFilters({ ...filters, idSucursal: e.target.value })}
+            className="appearance-none bg-white dark:bg-dark-bg dark:text-neutral-100 border border-neutral-300 dark:border-dark-border rounded-lg pl-4 pr-10 py-2.5 text-sm font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer transition-all shadow-md hover:shadow-lg hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loadingSucursales}
+          >
+            <option value="">Todas las Sucursales</option>
+            {sucursales.map((sucursal) => (
+              <option key={sucursal.id} value={sucursal.id}>
+                {sucursal.nombre}
+              </option>
+            ))}
+          </select>
+          {/* Icono de flecha personalizado */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
-      </div>
+
+        {/* Filtro de Categoría */}
+        <div className="relative">
+          <select
+            id="category-filter"
+            value={filters.categoriaId || ''}
+            onChange={(e) => setFilters({ ...filters, categoriaId: e.target.value })}
+            className="appearance-none bg-white dark:bg-dark-bg dark:text-neutral-100 border border-neutral-300 dark:border-dark-border rounded-lg pl-4 pr-10 py-2.5 text-sm font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer transition-all shadow-md hover:shadow-lg hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loadingCategorias}
+          >
+            <option value="">Todas las Categorías</option>
+            {categorias.map((categoria) => (
+              <option key={categoria.id} value={categoria.id}>
+                {categoria.nivel > 1 && '— '.repeat(categoria.nivel - 1)}
+                {categoria.nombre}
+              </option>
+            ))}
+          </select>
+          {/* Icono de flecha personalizado */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </>
     );
   };
 
@@ -199,8 +246,8 @@ export const CursosPage = () => {
       onEdit={handleEdit}
       onView={handleView}
       statusOptions={statusOptions}
-      renderAdditionalFilters={renderCategoryFilter}
-      additionalFilters={{ categoriaId: '' }}
+      renderAdditionalFilters={renderAdditionalFilters}
+      additionalFilters={{ categoriaId: '', idSucursal: '' }}
     />
   );
 };

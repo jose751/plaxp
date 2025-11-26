@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { LoginPage, PasswordRecoveryPage, VerifyCodePage, ResetPasswordPage, DashboardPage } from './features/security';
-import { UsersPage } from './features/users';
+import { UsersPage, CreateEditUserPage, ViewUserPage } from './features/users';
 import { RolesPage, CreateEditRolPage, ViewRolPage } from './features/roles';
 import { EstudiantesPage, ViewEstudiantePage, CreateEditEstudiantePage } from './features/estudiantes';
 import { CursosPage, CreateEditCursoPage, ViewCursoPage } from './features/cursos';
@@ -56,6 +56,30 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <UsersPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/usuarios/create" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditUserPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/usuarios/edit/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditUserPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/usuarios/view/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ViewUserPage />
           </MainLayout>
         </ProtectedRoute>
       } />

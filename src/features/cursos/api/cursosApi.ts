@@ -23,6 +23,7 @@ export const listarCursosApi = async (
   if (params.q) queryParams.append('q', params.q);
   if (params.estado) queryParams.append('estado', params.estado);
   if (params.categoriaId) queryParams.append('categoriaId', params.categoriaId);
+  if (params.idSucursal) queryParams.append('idSucursal', params.idSucursal);
 
   const url = `cursos${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
