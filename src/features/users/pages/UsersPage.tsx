@@ -10,6 +10,7 @@ import PaginatedDataTable, {
 import { listarUsuariosApi } from '../api/UsersApi';
 import type { Usuario } from '../types/user.types';
 import { UserAvatar } from '../components/UserAvatar';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Interfaz de Usuario extendida para el componente
 interface User extends BaseItem {
@@ -128,6 +129,7 @@ const fetchUsers = async (
 export const UsersPage = () => {
   const navigate = useNavigate();
   const [refreshTrigger, _setRefreshTrigger] = useState(0);
+  const { hasPermission } = usePermissions();
 
   const handleView = (user: User) => {
     navigate(`/usuarios/view/${user.id}`);
@@ -147,8 +149,8 @@ export const UsersPage = () => {
       columns={columns}
       fetchDataFunction={fetchUsers}
       onRowClick={handleView}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('usuarios.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('usuarios.editar') ? handleEdit : undefined}
       onView={handleView}
       statusOptions={statusOptions}
       refreshTrigger={refreshTrigger}

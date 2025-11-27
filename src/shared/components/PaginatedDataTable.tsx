@@ -30,7 +30,7 @@ export interface StatusOption {
 interface PaginatedDataTableProps<T extends BaseItem> {
     fetchDataFunction: (page: number, limit: number, query: string, status?: string, additionalFilters?: Record<string, any>) => Promise<PaginatedResponse<T>>;
     onRowClick: (item: T) => void;
-    onCreateNew: () => void;
+    onCreateNew?: () => void;  // Opcional: callback para crear nuevo (si no se pasa, no muestra el botón)
     onEdit?: (item: T) => void;  // Opcional: callback para editar
     onView?: (item: T) => void;  // Opcional: callback para ver detalles
     columns: ColumnDefinition<T>[];
@@ -483,14 +483,16 @@ const PaginatedDataTable = <T extends BaseItem>({
                             })}
                         </div>
 
-                        {/* Botón crear */}
-                        <button
-                            onClick={onCreateNew}
-                            className="bg-success hover:bg-success/90 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-success/50 disabled:opacity-50 w-full sm:w-auto text-sm shadow-md hover:shadow-lg"
-                            disabled={loading}
-                        >
-                            <FaPlus className="inline-block mr-2" /> Crear Nuevo
-                        </button>
+                        {/* Botón crear (solo si onCreateNew está definido) */}
+                        {onCreateNew && (
+                            <button
+                                onClick={onCreateNew}
+                                className="bg-success hover:bg-success/90 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-success/50 disabled:opacity-50 w-full sm:w-auto text-sm shadow-md hover:shadow-lg"
+                                disabled={loading}
+                            >
+                                <FaPlus className="inline-block mr-2" /> Crear Nuevo
+                            </button>
+                        )}
                     </div>
                 </div>
 

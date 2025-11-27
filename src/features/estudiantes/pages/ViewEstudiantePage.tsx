@@ -7,10 +7,12 @@ import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Estudiante } from '../types/estudiante.types';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
 import { UserAvatar } from '../../users/components/UserAvatar';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 export const ViewEstudiantePage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hasPermission } = usePermissions();
   const [estudiante, setEstudiante] = useState<Estudiante | null>(null);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,13 +128,15 @@ export const ViewEstudiantePage: React.FC = () => {
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 mt-1">Información completa del estudiante</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/estudiantes/edit/${estudiante.id}`)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
-          >
-            <FaEdit className="w-4 h-4" />
-            Editar
-          </button>
+          {hasPermission('estudiantes.editar') && (
+            <button
+              onClick={() => navigate(`/estudiantes/edit/${estudiante.id}`)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
+            >
+              <FaEdit className="w-4 h-4" />
+              Editar
+            </button>
+          )}
         </div>
       </div>
 

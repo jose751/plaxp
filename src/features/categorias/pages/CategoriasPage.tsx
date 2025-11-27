@@ -8,6 +8,7 @@ import PaginatedDataTable, {
 } from '../../../shared/components/PaginatedDataTable';
 import { listarCategoriasApi } from '../api/categoriasApi';
 import type { Categoria } from '../types/categoria.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 interface CategoriaItem extends BaseItem {
   id: string;
@@ -113,6 +114,7 @@ const fetchCategorias = async (
 export const CategoriasPage = () => {
   const navigate = useNavigate();
   const [refreshTrigger] = useState(0);
+  const { hasPermission } = usePermissions();
 
   const handleRowClick = (categoria: CategoriaItem) => {
     navigate(`/categorias/view/${categoria.id}`);
@@ -136,8 +138,8 @@ export const CategoriasPage = () => {
       columns={columns}
       fetchDataFunction={fetchCategorias}
       onRowClick={handleRowClick}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('categorias.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('categorias.editar') ? handleEdit : undefined}
       onView={handleView}
       refreshTrigger={refreshTrigger}
     />

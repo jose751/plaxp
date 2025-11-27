@@ -17,6 +17,11 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   finishLoading: () => void;
+
+  // Permisos
+  hasPermission: (codigo: string) => boolean;
+  hasAnyPermission: (codigos: string[]) => boolean;
+  hasAllPermissions: (codigos: string[]) => boolean;
 }
 
 /**
@@ -154,6 +159,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoginInProgress(false);
   }, []);
 
+  /**
+   * Verifica si el usuario tiene un permiso específico
+   * @param codigo - Código del permiso (ej: 'usuarios.ver', 'roles.crear')
+   */
+  const hasPermission = useCallback(
+    (codigo: string): boolean => {
+      if (!user?.permisos) return false;
+      return user.permisos.some((permiso) => permiso.codigo === codigo);
+    },
+    [user]
+  );
+
+  /**
+   * Verifica si el usuario tiene al menos uno de los permisos especificados
+   * @param codigos - Array de códigos de permisos
+   */
+  const hasAnyPermission = useCallback(
+    (codigos: string[]): boolean => {
+      if (!user?.permisos || codigos.length === 0) return false;
+      return codigos.some((codigo) => user.permisos!.some((permiso) => permiso.codigo === codigo));
+    },
+    [user]
+  );
+
+  /**
+   * Verifica si el usuario tiene todos los permisos especificados
+   * @param codigos - Array de códigos de permisos
+   */
+  const hasAllPermissions = useCallback(
+    (codigos: string[]): boolean => {
+      if (!user?.permisos) return false;
+      if (codigos.length === 0) return true;
+      return codigos.every((codigo) => user.permisos!.some((permiso) => permiso.codigo === codigo));
+    },
+    [user]
+  );
+
   const value: AuthContextType = {
     isAuthenticated,
     user,
@@ -162,6 +204,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     finishLoading,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -12,6 +12,7 @@ import type { Estudiante } from '../types/estudiante.types';
 import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
 import { UserAvatar } from '../../users/components/UserAvatar';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Interfaz de Estudiante extendida para el componente
 interface Student extends BaseItem {
@@ -46,6 +47,7 @@ const statusOptions: StatusOption[] = [
 // Componente principal
 export const EstudiantesPage = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const [refreshTrigger] = useState(0);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loadingSucursales, setLoadingSucursales] = useState(false);
@@ -195,8 +197,8 @@ export const EstudiantesPage = () => {
       columns={columns}
       fetchDataFunction={fetchStudents}
       onRowClick={handleView}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('estudiantes.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('estudiantes.editar') ? handleEdit : undefined}
       onView={handleView}
       statusOptions={statusOptions}
       refreshTrigger={refreshTrigger}

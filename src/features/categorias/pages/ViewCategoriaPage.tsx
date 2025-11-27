@@ -4,10 +4,12 @@ import { FaArrowLeft, FaClock, FaCheckCircle, FaTimesCircle, FaEdit, FaEye, FaEy
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerCategoriaPorIdApi } from '../api/categoriasApi';
 import type { Categoria } from '../types/categoria.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 export const ViewCategoriaPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hasPermission } = usePermissions();
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,13 +106,15 @@ export const ViewCategoriaPage: React.FC = () => {
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 mt-1">Información completa de la categoría</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/categorias/edit/${categoria.id}`)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
-          >
-            <FaEdit className="w-4 h-4" />
-            Editar
-          </button>
+          {hasPermission('categorias.editar') && (
+            <button
+              onClick={() => navigate(`/categorias/edit/${categoria.id}`)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
+            >
+              <FaEdit className="w-4 h-4" />
+              Editar
+            </button>
+          )}
         </div>
       </div>
 

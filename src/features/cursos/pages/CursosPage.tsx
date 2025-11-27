@@ -13,6 +13,7 @@ import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Curso } from '../types/curso.types';
 import type { Categoria } from '../../categorias/types/categoria.types';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Interfaz de Curso extendida para el componente
 interface CursoItem extends BaseItem {
@@ -122,6 +123,7 @@ const fetchCursos = async (
 // Componente principal
 export const CursosPage = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
@@ -242,8 +244,8 @@ export const CursosPage = () => {
       columns={columns}
       fetchDataFunction={fetchCursos}
       onRowClick={handleView}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('cursos.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('cursos.editar') ? handleEdit : undefined}
       onView={handleView}
       statusOptions={statusOptions}
       renderAdditionalFilters={renderAdditionalFilters}

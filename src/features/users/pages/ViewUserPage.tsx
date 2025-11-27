@@ -7,10 +7,12 @@ import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { UsuarioDetalle } from '../types/user.types';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
 import { UserAvatar } from '../components/UserAvatar';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 export const ViewUserPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hasPermission } = usePermissions();
   const [usuario, setUsuario] = useState<UsuarioDetalle | null>(null);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,13 +130,15 @@ export const ViewUserPage: React.FC = () => {
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 mt-1">Información completa del usuario</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/usuarios/edit/${usuario.id}`)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
-          >
-            <FaEdit className="w-4 h-4" />
-            Editar
-          </button>
+          {hasPermission('usuarios.editar') && (
+            <button
+              onClick={() => navigate(`/usuarios/edit/${usuario.id}`)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
+            >
+              <FaEdit className="w-4 h-4" />
+              Editar
+            </button>
+          )}
         </div>
       </div>
 

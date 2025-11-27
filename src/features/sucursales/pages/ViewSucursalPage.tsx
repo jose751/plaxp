@@ -4,10 +4,12 @@ import { FaArrowLeft, FaBuilding, FaClock, FaCheckCircle, FaTimesCircle, FaEdit,
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerSucursalPorIdApi } from '../api/sucursalesApi';
 import type { Sucursal } from '../types/sucursal.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 export const ViewSucursalPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hasPermission } = usePermissions();
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,13 +103,15 @@ export const ViewSucursalPage: React.FC = () => {
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 mt-1">Información completa de la sucursal</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/sucursales/edit/${sucursal.id}`)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
-          >
-            <FaEdit className="w-4 h-4" />
-            Editar
-          </button>
+          {hasPermission('sucursales.editar') && (
+            <button
+              onClick={() => navigate(`/sucursales/edit/${sucursal.id}`)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
+            >
+              <FaEdit className="w-4 h-4" />
+              Editar
+            </button>
+          )}
         </div>
       </div>
 

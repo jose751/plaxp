@@ -9,6 +9,7 @@ import PaginatedDataTable, {
 } from '../../../shared/components/PaginatedDataTable';
 import { listarRolesApi } from '../api/rolesApi';
 import type { Rol } from '../types/role.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Interfaz de Rol extendida para el componente
 interface RolItem extends BaseItem {
@@ -120,6 +121,7 @@ const fetchRoles = async (
 export const RolesPage = () => {
   const navigate = useNavigate();
   const [refreshTrigger] = useState(0);
+  const { hasPermission } = usePermissions();
 
   const handleRowClick = (rol: RolItem) => {
     navigate(`/roles/view/${rol.id}`);
@@ -143,8 +145,8 @@ export const RolesPage = () => {
       columns={columns}
       fetchDataFunction={fetchRoles}
       onRowClick={handleRowClick}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('roles.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('roles.editar') ? handleEdit : undefined}
       onView={handleView}
       statusOptions={statusOptions}
       refreshTrigger={refreshTrigger}

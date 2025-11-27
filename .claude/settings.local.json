@@ -9,7 +9,9 @@
       "Bash(curl:*)",
       "WebSearch",
       "WebFetch(domain:developer.calendly.com)",
-      "WebFetch(domain:community.zapier.com)"
+      "WebFetch(domain:community.zapier.com)",
+      "Bash(dir \"C:\\Users\\XPC\\Desktop\\desarrollo\\plaxp\\src\" /B)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

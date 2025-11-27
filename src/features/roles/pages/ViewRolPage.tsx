@@ -4,10 +4,12 @@ import { FaArrowLeft, FaShieldAlt, FaClock, FaCheckCircle, FaTimesCircle, FaKey,
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerRolConPermisosApi } from '../api/rolesApi';
 import type { RolConPermisos } from '../types/role.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 export const ViewRolPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hasPermission } = usePermissions();
   const [rol, setRol] = useState<RolConPermisos | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,13 +104,15 @@ export const ViewRolPage: React.FC = () => {
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 mt-1">Información completa del rol y sus permisos</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/roles/edit/${rol.id}`)}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
-          >
-            <FaEdit className="w-4 h-4" />
-            Editar
-          </button>
+          {hasPermission('roles.editar') && (
+            <button
+              onClick={() => navigate(`/roles/edit/${rol.id}`)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto shadow-md"
+            >
+              <FaEdit className="w-4 h-4" />
+              Editar
+            </button>
+          )}
         </div>
       </div>
 
@@ -217,12 +221,14 @@ export const ViewRolPage: React.FC = () => {
         <div className="bg-neutral-50 dark:bg-neutral-800/20 border border-neutral-200 dark:border-dark-border rounded-lg p-6 md:p-8 text-center">
           <FaKey className="w-8 h-8 md:w-10 md:h-10 text-neutral-400 dark:text-neutral-500 mx-auto mb-3" />
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">Este rol no tiene permisos asignados</p>
-          <button
-            onClick={() => navigate(`/roles/edit/${rol.id}`)}
-            className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium transition-colors"
-          >
-            Asignar permisos
-          </button>
+          {hasPermission('roles.gestionar_permisos') && (
+            <button
+              onClick={() => navigate(`/roles/edit/${rol.id}`)}
+              className="px-4 py-2 text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium transition-colors"
+            >
+              Asignar permisos
+            </button>
+          )}
         </div>
       )}
     </div>

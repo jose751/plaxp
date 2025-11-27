@@ -7,3 +7,5 @@ export {
   easeOutCubic,
   easeInOutCubic,
 } from './useScrollAnimation';
+
+export { usePermissions, useHasPermission } from './usePermissions';

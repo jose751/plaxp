@@ -11,6 +11,7 @@ import { listarProfesoresApi } from '../api/profesoresApi';
 import type { Profesor } from '../types/profesor.types';
 import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Interfaz de Profesor extendida para el componente
 interface Teacher extends BaseItem {
@@ -45,6 +46,7 @@ const statusOptions: StatusOption[] = [
 // Componente principal
 export const ProfesoresPage = () => {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const [refreshTrigger] = useState(0);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loadingSucursales, setLoadingSucursales] = useState(false);
@@ -186,8 +188,8 @@ export const ProfesoresPage = () => {
       columns={columns}
       fetchDataFunction={fetchTeachers}
       onRowClick={handleView}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('profesores.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('profesores.editar') ? handleEdit : undefined}
       onView={handleView}
       statusOptions={statusOptions}
       refreshTrigger={refreshTrigger}

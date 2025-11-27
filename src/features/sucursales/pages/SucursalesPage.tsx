@@ -9,6 +9,7 @@ import PaginatedDataTable, {
 } from '../../../shared/components/PaginatedDataTable';
 import { listarSucursalesApi } from '../api/sucursalesApi';
 import type { Sucursal } from '../types/sucursal.types';
+import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 interface SucursalItem extends BaseItem {
   id: string;
@@ -109,6 +110,7 @@ const fetchSucursales = async (
 export const SucursalesPage = () => {
   const navigate = useNavigate();
   const [refreshTrigger] = useState(0);
+  const { hasPermission } = usePermissions();
 
   const handleRowClick = (sucursal: SucursalItem) => {
     navigate(`/sucursales/view/${sucursal.id}`);
@@ -132,8 +134,8 @@ export const SucursalesPage = () => {
       columns={columns}
       fetchDataFunction={fetchSucursales}
       onRowClick={handleRowClick}
-      onCreateNew={handleCreateNew}
-      onEdit={handleEdit}
+      onCreateNew={hasPermission('sucursales.crear') ? handleCreateNew : undefined}
+      onEdit={hasPermission('sucursales.editar') ? handleEdit : undefined}
       onView={handleView}
       statusOptions={statusOptions}
       refreshTrigger={refreshTrigger}
