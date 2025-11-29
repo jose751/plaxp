@@ -130,7 +130,7 @@ export const SucursalesPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Gestión de Sucursales"
+      title="Sucursales"
       columns={columns}
       fetchDataFunction={fetchSucursales}
       onRowClick={handleRowClick}

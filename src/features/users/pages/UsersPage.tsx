@@ -145,7 +145,7 @@ export const UsersPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Gestión de Usuarios"
+      title="Usuarios"
       columns={columns}
       fetchDataFunction={fetchUsers}
       onRowClick={handleView}

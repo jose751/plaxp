@@ -8,6 +8,7 @@ import { CategoriasPage, CreateEditCategoriaPage, ViewCategoriaPage } from './fe
 import { ProfesoresPage, CreateEditProfesorPage, ViewProfesorPage } from './features/profesores';
 import { SucursalesPage, CreateEditSucursalPage, ViewSucursalPage } from './features/sucursales';
 import { PeriodosLectivosPage, CreateEditPeriodoLectivoPage, ViewPeriodoLectivoPage } from './features/periodosLectivos';
+import { PlanesPagoPage, CreateEditPlanPagoPage, ViewPlanPagoPage } from './features/planesPago';
 import { LandingPage } from './features/homePage/pages/LandingPage';
 import { DemoPage } from './features/homePage/pages/DemoPage';
 import { DemoSchedulePage } from './features/homePage/pages/DemoSchedulePage';
@@ -316,6 +317,39 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <ViewPeriodoLectivoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Rutas de Planes de Pago */}
+      <Route path="/planes-pago" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PlanesPagoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/planes-pago/create" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditPlanPagoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/planes-pago/edit/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditPlanPagoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/planes-pago/view/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ViewPlanPagoPage />
           </MainLayout>
         </ProtectedRoute>
       } />

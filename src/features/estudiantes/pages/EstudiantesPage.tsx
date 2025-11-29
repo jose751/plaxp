@@ -276,7 +276,7 @@ export const EstudiantesPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Gestión de Estudiantes"
+      title="Estudiantes"
       columns={columns}
       fetchDataFunction={fetchStudents}
       onRowClick={handleView}

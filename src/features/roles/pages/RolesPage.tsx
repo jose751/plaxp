@@ -141,7 +141,7 @@ export const RolesPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Gestión de Roles"
+      title="Roles"
       columns={columns}
       fetchDataFunction={fetchRoles}
       onRowClick={handleRowClick}

@@ -240,7 +240,7 @@ export const CursosPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Gestión de Cursos"
+      title="Cursos"
       columns={columns}
       fetchDataFunction={fetchCursos}
       onRowClick={handleView}

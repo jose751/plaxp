@@ -2,7 +2,7 @@ import React, { useState, useEffect, type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/security/hooks/useAuth';
 import { ThemeToggle } from '../components';
-import { FaChalkboardTeacher, FaSyncAlt } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaSyncAlt, FaCreditCard } from 'react-icons/fa';
 import { UserAvatar } from '../../features/users/components/UserAvatar';
 import { usePermissions } from '../hooks/usePermissions';
 
@@ -399,7 +399,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   </svg>
                 </div>
                 <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
-                  Categorías
+                  Categorías de Cursos
                 </span>
               </Link>
             )}
@@ -450,8 +450,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </Link>
             )}
 
-            {/* Separador - Financiero (solo si tiene permiso de periodos-lectivos) */}
-            {hasPermission('periodos-lectivos.ver') && (
+            {/* Separador - Financiero (solo si tiene permiso de periodos-lectivos o planes-pago) */}
+            {(hasPermission('periodos-lectivos.ver') || hasPermission('planes-pago.ver')) && (
               <>
                 <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
                     <p className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
@@ -492,6 +492,38 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </div>
                 <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
                   Periodos Lectivos
+                </span>
+              </Link>
+            )}
+
+            {/* Planes de Pago */}
+            {hasPermission('planes-pago.ver') && (
+              <Link
+                to="/planes-pago"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname.startsWith('/planes-pago')
+                    ? 'bg-gradient-to-r from-rose-500/15 to-rose-500/5 text-rose-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname.startsWith('/planes-pago') && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-rose-500 to-rose-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname.startsWith('/planes-pago')
+                    ? 'bg-gradient-to-br from-rose-500 to-rose-600 shadow-md shadow-rose-500/30'
+                    : 'bg-gradient-to-br from-rose-500 to-rose-600 shadow-md shadow-rose-500/20 group-hover:shadow-rose-500/30'
+                  }
+                `}>
+                  <FaCreditCard className="w-4 h-4 text-white" />
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Planes de Pago
                 </span>
               </Link>
             )}

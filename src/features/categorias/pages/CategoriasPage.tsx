@@ -134,7 +134,7 @@ export const CategoriasPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Gestión de Categorías de Cursos"
+      title="Categorías de Cursos"
       columns={columns}
       fetchDataFunction={fetchCategorias}
       onRowClick={handleRowClick}
