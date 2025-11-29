@@ -57,7 +57,7 @@ export interface ListarEstudiantesResponse {
 export interface ListarEstudiantesParams {
   page?: number;
   limit?: number;
-  nombre?: string;
+  q?: string;
   correo?: string;
   identificacion?: string;
   idMoodle?: string;
@@ -150,4 +150,48 @@ export interface SincronizarMoodleResponse {
   success: boolean;
   message: string;
   data: {};
+}
+
+/**
+ * Datos para carga masiva de estudiantes
+ */
+export interface EstudianteMasivoData {
+  nombre: string;
+  primerApellido: string;
+  segundoApellido?: string;
+  correo: string;
+  identificacion?: string;
+  telefono?: string;
+  fechaNacimiento?: string;
+  direccion?: string;
+  idSucursal: string;
+}
+
+/**
+ * Estudiante fallido en carga masiva
+ */
+export interface EstudianteFallido {
+  indice: number;
+  datos: {
+    nombre?: string;
+    primerApellido?: string;
+    correo?: string;
+    identificacion?: string;
+  };
+  error: string;
+}
+
+/**
+ * Respuesta de carga masiva de estudiantes
+ */
+export interface CargaMasivaResponse {
+  success: boolean;
+  message: string;
+  data: {
+    exitosos: Estudiante[];
+    fallidos: EstudianteFallido[];
+    totalProcesados: number;
+    totalExitosos: number;
+    totalFallidos: number;
+  };
 }

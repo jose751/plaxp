@@ -18,6 +18,7 @@ export const CreateEditCategoriaPage: React.FC = () => {
 
   const [formData, setFormData] = useState<CrearCategoriaData>({
     nombre: '',
+    slug: '',
     descripcion: '',
     parentId: null,
     orden: 0,
@@ -56,6 +57,7 @@ export const CreateEditCategoriaPage: React.FC = () => {
 
       setFormData({
         nombre: cat.nombre,
+        slug: cat.slug || '',
         descripcion: cat.descripcion || '',
         parentId: cat.parentId,
         orden: cat.orden,
@@ -278,11 +280,11 @@ export const CreateEditCategoriaPage: React.FC = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 disabled={loading}
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all dark:bg-dark-bg dark:border-dark-border ${
+                className={`w-full px-3 py-2 border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 transition-all ${
                   errors.nombre
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                    : 'border-neutral-300 focus:border-neutral-400 focus:ring-neutral-100'
-                } disabled:bg-neutral-50 disabled:cursor-not-allowed`}
+                    ? 'border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-900'
+                    : 'border-neutral-300 dark:border-dark-border focus:border-neutral-400 dark:focus:border-neutral-600 focus:ring-neutral-100 dark:focus:ring-neutral-800'
+                } disabled:bg-neutral-50 dark:disabled:bg-neutral-700/50 disabled:cursor-not-allowed placeholder:text-neutral-400 dark:placeholder:text-neutral-500`}
                 placeholder="Ej: Desarrollo Web"
               />
               {errors.nombre && (

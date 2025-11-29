@@ -152,8 +152,10 @@ class ApiService {
       cookies: document.cookie,
     });
 
-    // Determinar timeout según el tipo de operación
-    const timeout = config.loadingType === LoadingType.UPLOADING
+    // Determinar timeout según el tipo de operación o usar el personalizado
+    const timeout = config.timeout
+      ? config.timeout
+      : config.loadingType === LoadingType.UPLOADING
       ? API_TIMEOUTS.upload
       : config.loadingType === LoadingType.DOWNLOADING
       ? API_TIMEOUTS.download

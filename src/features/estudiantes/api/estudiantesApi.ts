@@ -10,6 +10,8 @@ import type {
   EliminarEstudianteResponse,
   SincronizarMoodleData,
   SincronizarMoodleResponse,
+  EstudianteMasivoData,
+  CargaMasivaResponse,
 } from '../types/estudiante.types';
 
 /**
@@ -40,28 +42,12 @@ export const listarEstudiantesApi = async (
     queryParams.limit = params.limit;
   }
 
-  if (params?.nombre) {
-    queryParams.nombre = params.nombre;
-  }
-
-  if (params?.correo) {
-    queryParams.correo = params.correo;
-  }
-
-  if (params?.identificacion) {
-    queryParams.identificacion = params.identificacion;
-  }
-
-  if (params?.idMoodle) {
-    queryParams.idMoodle = params.idMoodle;
+  if (params?.q) {
+    queryParams.q = params.q;
   }
 
   if (params?.estado !== undefined) {
     queryParams.estado = params.estado;
-  }
-
-  if (params?.requiereFacturaElectronica !== undefined) {
-    queryParams.requiereFacturaElectronica = params.requiereFacturaElectronica;
   }
 
   if (params?.idSucursal) {
@@ -129,7 +115,8 @@ export const obtenerEstudiantePorIdApi = async (
 export const actualizarEstudianteApi = async (
   id: string,
   data: ActualizarEstudianteData,
-  foto?: File
+  foto?: File,
+  eliminarFoto?: boolean
 ): Promise<ActualizarEstudianteResponse> => {
   const formData = new FormData();
   if (data.nombre) formData.append('nombre', data.nombre);
@@ -147,6 +134,8 @@ export const actualizarEstudianteApi = async (
 
   if (foto) {
     formData.append('foto', foto);
+  } else if (eliminarFoto) {
+    formData.append('eliminarFoto', 'true');
   }
 
   return await apiService.uploadPut<ActualizarEstudianteResponse>(`estudiantes/${id}`, formData);
@@ -178,5 +167,23 @@ export const sincronizarMoodleApi = async (
   return await apiService.post<SincronizarMoodleResponse>(
     `estudiantes/${id}/sync-moodle`,
     data
+  );
+};
+
+/**
+ * Carga masiva de estudiantes
+ * POST /api/estudiantes/masivo
+ *
+ * Crea múltiples estudiantes en una sola petición.
+ * Cada estudiante se crea con su usuario en Moodle automáticamente.
+ * Se envía correo con credenciales a cada estudiante creado exitosamente.
+ */
+export const cargaMasivaEstudiantesApi = async (
+  estudiantes: EstudianteMasivoData[]
+): Promise<CargaMasivaResponse> => {
+  return await apiService.post<CargaMasivaResponse>(
+    'estudiantes/masivo',
+    { estudiantes },
+    { timeout: 300000 } // 5 minutos para carga masiva
   );
 };

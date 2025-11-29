@@ -49,5 +49,6 @@ export const useAuth = () => {
     user: context.user,
     isLoading: localLoading,
     logout: context.logout,
+    refreshPermissions: context.refreshPermissions,
   };
 };

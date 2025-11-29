@@ -11,7 +11,8 @@
       "WebFetch(domain:developer.calendly.com)",
       "WebFetch(domain:community.zapier.com)",
       "Bash(dir \"C:\\Users\\XPC\\Desktop\\desarrollo\\plaxp\\src\" /B)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

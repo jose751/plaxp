@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaExclamationCircle, FaSave, FaGraduationCap, FaCheckCircle, FaCamera } from 'react-icons/fa';
+import { FaArrowLeft, FaExclamationCircle, FaSave, FaGraduationCap, FaCheckCircle, FaCamera, FaVideo } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
 import { CgSpinner } from 'react-icons/cg';
 import { crearEstudianteApi, actualizarEstudianteApi, obtenerEstudiantePorIdApi } from '../api/estudiantesApi';
@@ -41,8 +41,16 @@ export const CreateEditEstudiantePage: React.FC = () => {
   const [foto, setFoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentPathFoto, setCurrentPathFoto] = useState<string | null>(null);
+  const [eliminarFoto, setEliminarFoto] = useState(false); // Flag para indicar que se debe eliminar la foto
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estado para la cámara
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Cargar estudiante si es modo edición
   useEffect(() => {
@@ -159,6 +167,7 @@ export const CreateEditEstudiantePage: React.FC = () => {
     }
     setFoto(file);
     setPreviewUrl(URL.createObjectURL(file));
+    setEliminarFoto(false); // Si se agrega nueva foto, no eliminar
     setApiError(null);
   }, []);
 
@@ -172,6 +181,10 @@ export const CreateEditEstudiantePage: React.FC = () => {
   const handleRemoveFoto = () => {
     setFoto(null);
     setPreviewUrl(null);
+    // Si había una foto existente, marcar para eliminar
+    if (currentPathFoto) {
+      setEliminarFoto(true);
+    }
     setCurrentPathFoto(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -199,6 +212,85 @@ export const CreateEditEstudiantePage: React.FC = () => {
       processFile(file);
     }
   }, [processFile]);
+
+  // Funciones para la cámara
+  const openCamera = async () => {
+    setCameraError(null);
+    setShowCamera(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false,
+      });
+
+      setCameraStream(stream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error: any) {
+      console.error('Error al acceder a la cámara:', error);
+      if (error.name === 'NotAllowedError') {
+        setCameraError('Permiso de cámara denegado. Por favor, permite el acceso a la cámara.');
+      } else if (error.name === 'NotFoundError') {
+        setCameraError('No se encontró ninguna cámara en el dispositivo.');
+      } else {
+        setCameraError('Error al acceder a la cámara. Intenta de nuevo.');
+      }
+    }
+  };
+
+  const closeCamera = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+    setCameraError(null);
+  }, [cameraStream]);
+
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    // Configurar el canvas con las dimensiones del video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Dibujar el frame actual del video en el canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convertir el canvas a blob
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          // Crear un archivo desde el blob
+          const file = new File([blob], `foto_${Date.now()}.jpg`, { type: 'image/jpeg' });
+          setFoto(file);
+          setPreviewUrl(URL.createObjectURL(file));
+          setCurrentPathFoto(null);
+          closeCamera();
+        }
+      },
+      'image/jpeg',
+      0.9
+    );
+  }, [closeCamera]);
+
+  // Limpiar stream al desmontar
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   // Obtener nombre completo para el avatar
   const getNombreCompleto = () => {
@@ -242,7 +334,7 @@ export const CreateEditEstudiantePage: React.FC = () => {
           idSucursal: formData.idSucursal,
         };
 
-        response = await actualizarEstudianteApi(id, updateData, foto || undefined);
+        response = await actualizarEstudianteApi(id, updateData, foto || undefined, eliminarFoto);
       } else {
         setLoadingMessage('Creando estudiante...');
 
@@ -422,15 +514,26 @@ export const CreateEditEstudiantePage: React.FC = () => {
                   <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
                     JPG, PNG o WebP • Máx. 5MB
                   </p>
-                  <button
-                    type="button"
-                    onClick={handleFotoClick}
-                    disabled={loading}
-                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-dark-bg border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                  >
-                    <FaCamera className="w-4 h-4" />
-                    {(previewUrl || currentPathFoto) ? 'Cambiar foto' : 'Subir foto'}
-                  </button>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleFotoClick}
+                      disabled={loading}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-white dark:bg-dark-bg border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                    >
+                      <FaCamera className="w-4 h-4" />
+                      {(previewUrl || currentPathFoto) ? 'Cambiar foto' : 'Subir foto'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={openCamera}
+                      disabled={loading}
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-300 bg-white dark:bg-dark-bg border border-green-200 dark:border-green-700 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                    >
+                      <FaVideo className="w-4 h-4" />
+                      Tomar foto
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -690,6 +793,104 @@ export const CreateEditEstudiantePage: React.FC = () => {
           </div>
         </form>
       )}
+      {/* Camera Modal */}
+      {showCamera && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 dark:border-dark-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                  <FaVideo className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                  Tomar Foto
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="p-2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+              >
+                <HiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5">
+              {cameraError ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+                    <FaExclamationCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
+                  </div>
+                  <p className="text-sm text-red-600 dark:text-red-400 text-center max-w-xs">
+                    {cameraError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={closeCamera}
+                    className="mt-4 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Video Preview */}
+                  <div className="relative aspect-[4/3] bg-neutral-900 rounded-xl overflow-hidden">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {!cameraStream && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <CgSpinner className="w-10 h-10 text-white animate-spin" />
+                      </div>
+                    )}
+                    {/* Overlay frame guide */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-8 border-2 border-white/30 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  {/* Instructions */}
+                  <p className="text-xs text-center text-neutral-500 dark:text-neutral-400">
+                    Centra tu rostro en el círculo y presiona "Capturar"
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            {!cameraError && (
+              <div className="flex gap-3 px-5 py-4 border-t border-neutral-200 dark:border-dark-border bg-neutral-50 dark:bg-neutral-900/50">
+                <button
+                  type="button"
+                  onClick={closeCamera}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-dark-bg border border-neutral-300 dark:border-dark-border rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={capturePhoto}
+                  disabled={!cameraStream}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-green-500 to-green-600 rounded-lg hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md shadow-green-500/30"
+                >
+                  <FaCamera className="w-4 h-4" />
+                  Capturar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Hidden canvas for capturing photo */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
     </>
   );

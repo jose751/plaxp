@@ -42,6 +42,7 @@ export interface ApiRequestConfig {
   headers?: Record<string, string>;
   loadingType?: LoadingType;
   skipAuth?: boolean;
+  timeout?: number;
 }
 
 /**

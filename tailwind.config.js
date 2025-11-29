@@ -32,6 +32,9 @@ export default {
         warning: '#F59E0B',      // Amarillo/Naranja (advertencia)
         danger: '#EF4444',       // Rojo (error/peligro)
         info: '#3B82F6',         // Azul (información)
+        // Colores de exportación
+        excel: '#217346',        // Verde Excel
+        pdf: '#DC2626',          // Rojo PDF
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -66,6 +69,10 @@ export default {
           '0%': { opacity: '0', transform: 'translateX(30px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
+        'slide-in-right': {
+          '0%': { opacity: '0', transform: 'translateX(100%)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-out',
@@ -73,6 +80,7 @@ export default {
         'fadeInUp': 'fadeInUp 0.6s ease-out',
         'fadeInLeft': 'fadeInLeft 0.7s ease-out',
         'fadeInRight': 'fadeInRight 0.7s ease-out 0.2s both',
+        'slide-in-right': 'slide-in-right 0.3s ease-out',
       },
     },
   },

@@ -2,7 +2,7 @@ import React, { useState, useEffect, type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/security/hooks/useAuth';
 import { ThemeToggle } from '../components';
-import { FaChalkboardTeacher } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaSyncAlt } from 'react-icons/fa';
 import { UserAvatar } from '../../features/users/components/UserAvatar';
 import { usePermissions } from '../hooks/usePermissions';
 
@@ -38,8 +38,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [isHovered, setIsHovered] = useState(false);
   // Menú de modos abierto
   const [modeMenuOpen, setModeMenuOpen] = useState(false);
+  // Estado para el refresh de permisos
+  const [refreshingPermissions, setRefreshingPermissions] = useState(false);
 
-  const { user, logout } = useAuth();
+  const { user, logout, refreshPermissions } = useAuth();
   const { hasPermission } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,6 +54,17 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleRefreshPermissions = async () => {
+    setRefreshingPermissions(true);
+    try {
+      await refreshPermissions();
+    } catch (error) {
+      console.error('Error al actualizar permisos:', error);
+    } finally {
+      setRefreshingPermissions(false);
+    }
   };
 
   // Determinar si el sidebar está colapsado visualmente
@@ -437,6 +450,52 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </Link>
             )}
 
+            {/* Separador - Financiero (solo si tiene permiso de periodos-lectivos) */}
+            {hasPermission('periodos-lectivos.ver') && (
+              <>
+                <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
+                    <p className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+                      Financiero
+                    </p>
+                </div>
+                {isCollapsed && <div className="h-4"></div>}
+              </>
+            )}
+
+            {/* Periodos Lectivos */}
+            {hasPermission('periodos-lectivos.ver') && (
+              <Link
+                to="/periodos-lectivos"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname.startsWith('/periodos-lectivos')
+                    ? 'bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 text-emerald-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname.startsWith('/periodos-lectivos') && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname.startsWith('/periodos-lectivos')
+                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/30'
+                    : 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md shadow-emerald-500/20 group-hover:shadow-emerald-500/30'
+                  }
+                `}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Periodos Lectivos
+                </span>
+              </Link>
+            )}
+
             {/* Separador - Sistema */}
             <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
                 <p className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
@@ -627,7 +686,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </svg>
           </button>
 
-          <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">Plaxp</h1>
+          <h1></h1>
 
           <div className="flex items-center gap-2 lg:gap-4">
             <div className="flex items-center gap-3">
@@ -642,6 +701,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 className="ring-2 ring-primary/20 ring-offset-2"
               />
             </div>
+            <button
+              onClick={handleRefreshPermissions}
+              disabled={refreshingPermissions}
+              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 disabled:opacity-50"
+              title="Actualizar permisos"
+            >
+              <FaSyncAlt className={`w-4 h-4 ${refreshingPermissions ? 'animate-spin' : ''}`} />
+            </button>
             <ThemeToggle />
             <button
               onClick={handleLogout}

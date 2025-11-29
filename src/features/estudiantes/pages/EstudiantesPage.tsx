@@ -13,6 +13,9 @@ import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
 import { UserAvatar } from '../../users/components/UserAvatar';
 import { usePermissions } from '../../../shared/hooks/usePermissions';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Interfaz de Estudiante extendida para el componente
 interface Student extends BaseItem {
@@ -52,6 +55,9 @@ export const EstudiantesPage = () => {
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loadingSucursales, setLoadingSucursales] = useState(false);
 
+  // Estado para almacenar los datos actuales de la tabla (para exportación)
+  const [estudiantesData, setEstudiantesData] = useState<Estudiante[]>([]);
+
   // Cargar sucursales al montar el componente
   useEffect(() => {
     const loadSucursales = async () => {
@@ -87,13 +93,16 @@ export const EstudiantesPage = () => {
         page,
         limit,
         estado: status === 'todos' ? undefined : status === 'true',
-        nombre: query || undefined,
+        q: query || undefined,
         idSucursal: additionalFilters?.idSucursal || undefined,
       });
 
       if (!response.success) {
         throw new Error(response.message || 'Error al obtener estudiantes');
       }
+
+      // Guardar datos originales para exportación
+      setEstudiantesData(response.data.estudiantes);
 
       // Transformar los datos de la API al formato de Student
       const transformedData: Student[] = response.data.estudiantes.map((estudiante: Estudiante) => {
@@ -163,6 +172,80 @@ export const EstudiantesPage = () => {
     navigate(`/estudiantes/edit/${student.id}`);
   };
 
+  const handleImport = () => {
+    navigate('/estudiantes/import');
+  };
+
+  // Función para exportar a Excel
+  const handleExportExcel = () => {
+    if (estudiantesData.length === 0) return;
+
+    const exportData = estudiantesData.map((estudiante) => ({
+      'Nombre Completo': `${estudiante.nombre} ${estudiante.primerApellido} ${estudiante.segundoApellido || ''}`.trim(),
+      'Correo Electrónico': estudiante.correo,
+      'Teléfono': estudiante.telefono || 'N/A',
+      'Identificación': estudiante.identificacion,
+      'ID Moodle': estudiante.idMoodle || 'N/A',
+      'Estado': estudiante.estado ? 'Activo' : 'Inactivo',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Estudiantes');
+
+    // Ajustar ancho de columnas
+    const colWidths = [
+      { wch: 30 }, // Nombre Completo
+      { wch: 35 }, // Correo
+      { wch: 15 }, // Teléfono
+      { wch: 20 }, // Identificación
+      { wch: 12 }, // ID Moodle
+      { wch: 10 }, // Estado
+    ];
+    worksheet['!cols'] = colWidths;
+
+    XLSX.writeFile(workbook, `estudiantes_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  // Función para exportar a PDF
+  const handleExportPdf = () => {
+    if (estudiantesData.length === 0) return;
+
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(18);
+    doc.setTextColor(102, 51, 153); // Color morado
+    doc.text('Listado de Estudiantes', 14, 22);
+
+    // Fecha de generación
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 14, 30);
+
+    // Datos para la tabla
+    const tableData = estudiantesData.map((estudiante) => [
+      `${estudiante.nombre} ${estudiante.primerApellido} ${estudiante.segundoApellido || ''}`.trim(),
+      estudiante.correo,
+      estudiante.telefono || 'N/A',
+      estudiante.identificacion,
+      estudiante.idMoodle || 'N/A',
+      estudiante.estado ? 'Activo' : 'Inactivo',
+    ]);
+
+    // Crear tabla
+    autoTable(doc, {
+      head: [['Nombre', 'Correo', 'Teléfono', 'Identificación', 'ID Moodle', 'Estado']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [102, 51, 153], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 250] },
+    });
+
+    doc.save(`estudiantes_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   // Renderizar filtro de sucursal
   const renderSucursalFilter = (filters: Record<string, any>, setFilters: (filters: Record<string, any>) => void) => {
     return (
@@ -204,6 +287,9 @@ export const EstudiantesPage = () => {
       refreshTrigger={refreshTrigger}
       renderAdditionalFilters={renderSucursalFilter}
       additionalFilters={{ idSucursal: '' }}
+      onExportExcel={handleExportExcel}
+      onExportPdf={handleExportPdf}
+      onImport={handleImport}
     />
   );
 };

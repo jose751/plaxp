@@ -17,6 +17,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   finishLoading: () => void;
+  refreshPermissions: () => Promise<void>;
 
   // Permisos
   hasPermission: (codigo: string) => boolean;
@@ -160,6 +161,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   /**
+   * Función para refrescar los permisos del usuario actual
+   */
+  const refreshPermissions = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      const fullUserData = await fetchUserData();
+      if (fullUserData) {
+        // Actualizar usuario en memoria y localStorage
+        setUser(fullUserData);
+        localStorage.setItem('user', JSON.stringify(fullUserData));
+      }
+    } catch (error) {
+      console.error('Error al refrescar permisos:', error);
+      throw error;
+    }
+  }, [isAuthenticated]);
+
+  /**
    * Verifica si el usuario tiene un permiso específico
    * @param codigo - Código del permiso (ej: 'usuarios.ver', 'roles.crear')
    */
@@ -204,6 +224,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     finishLoading,
+    refreshPermissions,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,

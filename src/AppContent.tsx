@@ -2,11 +2,12 @@ import { Routes, Route } from 'react-router-dom';
 import { LoginPage, PasswordRecoveryPage, VerifyCodePage, ResetPasswordPage, DashboardPage } from './features/security';
 import { UsersPage, CreateEditUserPage, ViewUserPage } from './features/users';
 import { RolesPage, CreateEditRolPage, ViewRolPage } from './features/roles';
-import { EstudiantesPage, ViewEstudiantePage, CreateEditEstudiantePage } from './features/estudiantes';
+import { EstudiantesPage, ViewEstudiantePage, CreateEditEstudiantePage, ImportEstudiantesPage } from './features/estudiantes';
 import { CursosPage, CreateEditCursoPage, ViewCursoPage } from './features/cursos';
 import { CategoriasPage, CreateEditCategoriaPage, ViewCategoriaPage } from './features/categorias';
 import { ProfesoresPage, CreateEditProfesorPage, ViewProfesorPage } from './features/profesores';
 import { SucursalesPage, CreateEditSucursalPage, ViewSucursalPage } from './features/sucursales';
+import { PeriodosLectivosPage, CreateEditPeriodoLectivoPage, ViewPeriodoLectivoPage } from './features/periodosLectivos';
 import { LandingPage } from './features/homePage/pages/LandingPage';
 import { DemoPage } from './features/homePage/pages/DemoPage';
 import { DemoSchedulePage } from './features/homePage/pages/DemoSchedulePage';
@@ -148,6 +149,14 @@ export const AppContent = () => {
         </ProtectedRoute>
       } />
 
+      <Route path="/estudiantes/import" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ImportEstudiantesPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
       <Route path="/cursos" element={
         <ProtectedRoute>
           <MainLayout>
@@ -274,6 +283,39 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <ViewSucursalPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Rutas de Periodos Lectivos */}
+      <Route path="/periodos-lectivos" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PeriodosLectivosPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/periodos-lectivos/create" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditPeriodoLectivoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/periodos-lectivos/edit/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditPeriodoLectivoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/periodos-lectivos/view/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ViewPeriodoLectivoPage />
           </MainLayout>
         </ProtectedRoute>
       } />

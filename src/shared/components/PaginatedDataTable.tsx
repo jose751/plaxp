@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { FaEdit, FaEye, FaSearch, FaPlus, FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { FaEdit, FaEye, FaSearch, FaPlus, FaAngleLeft, FaAngleRight, FaFileExcel, FaFilePdf, FaDownload, FaUpload } from "react-icons/fa";
 import { CgSpinner } from "react-icons/cg";
 import React from 'react';
 
@@ -39,6 +39,9 @@ interface PaginatedDataTableProps<T extends BaseItem> {
     statusOptions?: StatusOption[];  // Opcional: array de estados disponibles
     renderAdditionalFilters?: (filters: Record<string, any>, setFilters: (filters: Record<string, any>) => void) => React.ReactNode;  // Opcional: renderizar filtros adicionales
     additionalFilters?: Record<string, any>;  // Opcional: filtros adicionales iniciales
+    onExportExcel?: () => void;  // Opcional: callback para exportar a Excel
+    onExportPdf?: () => void;  // Opcional: callback para exportar a PDF
+    onImport?: () => void;  // Opcional: callback para importar datos
 }
 
 const DEFAULT_PAGE_SIZE = 15;
@@ -245,6 +248,9 @@ const PaginatedDataTable = <T extends BaseItem>({
     statusOptions,
     renderAdditionalFilters,
     additionalFilters: initialAdditionalFilters = {},
+    onExportExcel,
+    onExportPdf,
+    onImport,
 }: PaginatedDataTableProps<T>) => {
     // Estado de la Data y UI
     const [data, setData] = useState<T[]>([]);
@@ -272,6 +278,10 @@ const PaginatedDataTable = <T extends BaseItem>({
     const [sortColumn, setSortColumn] = useState<keyof T | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+    // Estado del dropdown de exportación
+    const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+    const exportDropdownRef = useRef<HTMLDivElement>(null);
+
     // Ref para la función de fetch (evita recreaciones innecesarias)
     const fetchDataFunctionRef = useRef(fetchDataFunction);
     const loadingRef = useRef(false);
@@ -286,6 +296,17 @@ const PaginatedDataTable = <T extends BaseItem>({
         onEditRef.current = onEdit;
         onViewRef.current = onView;
     }, [fetchDataFunction, onRowClick, onEdit, onView]);
+
+    // Cerrar dropdown de exportación al hacer click fuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+                setExportDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Cálculo de páginas
     const totalPages = useMemo(() =>
@@ -483,16 +504,79 @@ const PaginatedDataTable = <T extends BaseItem>({
                             })}
                         </div>
 
-                        {/* Botón crear (solo si onCreateNew está definido) */}
-                        {onCreateNew && (
-                            <button
-                                onClick={onCreateNew}
-                                className="bg-success hover:bg-success/90 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-success/50 disabled:opacity-50 w-full sm:w-auto text-sm shadow-md hover:shadow-lg"
-                                disabled={loading}
-                            >
-                                <FaPlus className="inline-block mr-2" /> Crear Nuevo
-                            </button>
-                        )}
+                        {/* Botones de acción */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            {/* Dropdown de exportación (solo si hay funciones de exportación) */}
+                            {(onExportExcel || onExportPdf) && (
+                                <div className="relative" ref={exportDropdownRef}>
+                                    <button
+                                        onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                                        className="bg-neutral-600 hover:bg-neutral-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-500/50 disabled:opacity-50 text-sm shadow-md hover:shadow-lg flex items-center gap-2"
+                                        disabled={loading || data.length === 0}
+                                        title="Exportar datos"
+                                    >
+                                        <FaDownload className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Exportar</span>
+                                        <svg className={`w-4 h-4 transition-transform ${exportDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    {/* Dropdown menu */}
+                                    {exportDropdownOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-card rounded-lg shadow-xl border border-neutral-200 dark:border-dark-border z-50 overflow-hidden animate-fade-in">
+                                            {onExportExcel && (
+                                                <button
+                                                    onClick={() => {
+                                                        onExportExcel();
+                                                        setExportDropdownOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                                >
+                                                    <FaFileExcel className="w-5 h-5 text-green-600" />
+                                                    <span className="font-medium">Exportar a Excel</span>
+                                                </button>
+                                            )}
+                                            {onExportPdf && (
+                                                <button
+                                                    onClick={() => {
+                                                        onExportPdf();
+                                                        setExportDropdownOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-neutral-100 dark:border-dark-border"
+                                                >
+                                                    <FaFilePdf className="w-5 h-5 text-red-600" />
+                                                    <span className="font-medium">Exportar a PDF</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Botón importar (solo si onImport está definido) */}
+                            {onImport && (
+                                <button
+                                    onClick={onImport}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 text-sm shadow-md hover:shadow-lg flex items-center gap-2"
+                                    disabled={loading}
+                                    title="Importar datos"
+                                >
+                                    <FaUpload className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Importar</span>
+                                </button>
+                            )}
+
+                            {/* Botón crear (solo si onCreateNew está definido) */}
+                            {onCreateNew && (
+                                <button
+                                    onClick={onCreateNew}
+                                    className="bg-success hover:bg-success/90 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-success/50 disabled:opacity-50 flex-1 sm:flex-none text-sm shadow-md hover:shadow-lg"
+                                    disabled={loading}
+                                >
+                                    <FaPlus className="inline-block mr-2" /> Crear Nuevo
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
