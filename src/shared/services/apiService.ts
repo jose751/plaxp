@@ -204,10 +204,19 @@ class ApiService {
           throw new ApiError(408, 'TIMEOUT', 'La petición ha excedido el tiempo límite');
         }
 
-        throw new ApiError(0, 'NETWORK_ERROR', error.message);
+        // Mensaje amigable para errores de conexión
+        const isNetworkError = error.message === 'Failed to fetch' ||
+                               error.message.includes('NetworkError') ||
+                               error.message.includes('network');
+
+        const friendlyMessage = isNetworkError
+          ? 'Error al conectarse al servidor. Revisa tu conexión a internet.'
+          : error.message;
+
+        throw new ApiError(0, 'NETWORK_ERROR', friendlyMessage);
       }
 
-      throw new ApiError(0, 'UNKNOWN_ERROR', 'Error desconocido');
+      throw new ApiError(0, 'UNKNOWN_ERROR', 'Error al conectarse al servidor. Revisa tu conexión a internet.');
     }
   }
 
@@ -356,6 +365,17 @@ class ApiService {
       // Manejar timeout específicamente
       if (error instanceof Error && error.name === 'AbortError') {
         throw new ApiError(408, 'UPLOAD_TIMEOUT', `El upload excedió el tiempo límite de ${API_TIMEOUTS.upload / 1000}s`);
+      }
+
+      // Mensaje amigable para errores de conexión en uploads
+      if (error instanceof Error) {
+        const isNetworkError = error.message === 'Failed to fetch' ||
+                               error.message.includes('NetworkError') ||
+                               error.message.includes('network');
+
+        if (isNetworkError) {
+          throw new ApiError(0, 'NETWORK_ERROR', 'Error al conectarse al servidor. Revisa tu conexión a internet.');
+        }
       }
 
       throw error;
