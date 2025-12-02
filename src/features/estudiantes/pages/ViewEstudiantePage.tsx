@@ -146,21 +146,30 @@ export const ViewEstudiantePage: React.FC = () => {
         {/* Header con foto */}
         <div className="bg-gradient-to-r from-indigo-50 to-indigo-100/50 dark:from-indigo-900/20 dark:to-indigo-800/10 px-4 md:px-6 py-5 border-b border-indigo-100 dark:border-indigo-900/30">
           <div className="flex items-center gap-5">
-            <button
-              onClick={() => setShowPhotoModal(true)}
-              className="relative group cursor-pointer"
-              title="Ver foto en grande"
-            >
+            {estudiante.pathFoto ? (
+              <button
+                onClick={() => setShowPhotoModal(true)}
+                className="relative group cursor-pointer"
+                title="Ver foto en grande"
+              >
+                <UserAvatar
+                  nombre={`${estudiante.nombre} ${estudiante.primerApellido}`}
+                  pathFoto={estudiante.pathFoto}
+                  size="xl"
+                  className="ring-4 ring-white dark:ring-dark-card shadow-lg group-hover:ring-indigo-300 dark:group-hover:ring-indigo-700 transition-all"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-full flex items-center justify-center transition-all">
+                  <FaSearchPlus className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </button>
+            ) : (
               <UserAvatar
                 nombre={`${estudiante.nombre} ${estudiante.primerApellido}`}
                 pathFoto={estudiante.pathFoto}
                 size="xl"
-                className="ring-4 ring-white dark:ring-dark-card shadow-lg group-hover:ring-indigo-300 dark:group-hover:ring-indigo-700 transition-all"
+                className="ring-4 ring-white dark:ring-dark-card shadow-lg"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-full flex items-center justify-center transition-all">
-                <FaSearchPlus className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </button>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs text-neutral-500 dark:text-neutral-400">ID:</span>

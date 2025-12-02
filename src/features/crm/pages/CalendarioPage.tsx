@@ -307,12 +307,12 @@ export const CalendarioPage = () => {
       {/* Main Content */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Sidebar - Mini Calendario y Próximas Tareas */}
-        <div className={`${showSidebar ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-72 flex-shrink-0 gap-4`}>
+        <div className={`${showSidebar ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-60 flex-shrink-0 gap-3`}>
           {/* Mini Calendario */}
-          <div className="bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden">
-            <div className="p-4">
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div className="p-3">
               {/* Navegación Mini */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-2">
                 <button
                   onClick={goToPrevMonth}
                   className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
@@ -331,7 +331,7 @@ export const CalendarioPage = () => {
               </div>
 
               {/* Días de la semana */}
-              <div className="grid grid-cols-7 mb-2">
+              <div className="grid grid-cols-7 mb-1">
                 {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => (
                   <div key={i} className="text-center text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 py-1">
                     {d}
@@ -365,8 +365,8 @@ export const CalendarioPage = () => {
           </div>
 
           {/* Próximas Tareas */}
-          <div className="flex-1 bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden flex flex-col min-h-0">
-            <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
+          <div className="flex-1 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden flex flex-col min-h-0">
+            <div className="p-3 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
               <h3 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
                 <HiClock className="w-4 h-4 text-violet-500" />
                 Próximas tareas
@@ -525,8 +525,8 @@ export const CalendarioPage = () => {
 
         {/* Panel de detalles del día */}
         {selectedDate && (
-          <div className="hidden xl:flex flex-col w-80 flex-shrink-0 bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
+          <div className="hidden xl:flex flex-col w-64 flex-shrink-0 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div className="p-3 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
@@ -545,7 +545,7 @@ export const CalendarioPage = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-3">
               {actividadesDelDia.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-8">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 flex items-center justify-center mb-4">

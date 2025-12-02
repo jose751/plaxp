@@ -38,6 +38,7 @@ const HORAS_RAPIDAS = [
 
 // Opciones de duración
 const DURACIONES = [
+  { label: '15 min', minutos: 15 },
   { label: '30 min', minutos: 30 },
   { label: '1 hora', minutos: 60 },
   { label: '1.5 horas', minutos: 90 },
@@ -100,7 +101,7 @@ export const ActividadFormModal = ({
   const [contenido, setContenido] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [horaInicio, setHoraInicio] = useState('');
-  const [duracion, setDuracion] = useState(60); // minutos
+  const [duracion, setDuracion] = useState(15); // minutos - default 15 min
   const [participantes, setParticipantes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [mesActual, setMesActual] = useState(new Date());
@@ -134,7 +135,7 @@ export const ActividadFormModal = ({
         setContenido('');
         setFechaInicio(hoyKey);
         setHoraInicio('09:00');
-        setDuracion(60);
+        setDuracion(15);
         setParticipantes([]);
       }
       setMesActual(new Date());

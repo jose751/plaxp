@@ -13,10 +13,10 @@ import {
   FaDollarSign,
   FaPlus,
   FaUser,
-  FaTrash,
+  FaPrint,
 } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
-import { obtenerMatriculaPagoPorIdApi, obtenerResumenAbonosApi, crearAbonoApi, eliminarAbonoApi } from '../api/matriculasPagosApi';
+import { obtenerMatriculaPagoPorIdApi, obtenerResumenAbonosApi, crearAbonoApi } from '../api/matriculasPagosApi';
 import type { MatriculaPago, ResumenAbonos, Abono, CrearAbonoData } from '../types/matriculaPago.types';
 import { EstadoPago } from '../types/matriculaPago.types';
 
@@ -40,9 +40,6 @@ export const ViewMatriculaPagoPage: React.FC = () => {
   });
   const [abonoLoading, setAbonoLoading] = useState(false);
   const [abonoError, setAbonoError] = useState<string | null>(null);
-
-  // Eliminar abono
-  const [deletingAbonoId, setDeletingAbonoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -169,7 +166,7 @@ export const ViewMatriculaPagoPage: React.FC = () => {
 
   const handleAbonoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !resumen) return;
+    if (!id || !resumen || !pago) return;
 
     if (abonoForm.monto <= 0) {
       setAbonoError('El monto debe ser mayor a 0');
@@ -185,7 +182,7 @@ export const ViewMatriculaPagoPage: React.FC = () => {
     setAbonoError(null);
 
     try {
-      await crearAbonoApi({
+      const response = await crearAbonoApi({
         matriculaPagoId: id,
         metodoPago: abonoForm.metodoPago,
         monto: abonoForm.monto,
@@ -194,7 +191,39 @@ export const ViewMatriculaPagoPage: React.FC = () => {
       });
 
       setAbonoModalOpen(false);
-      await fetchData();
+
+      // Navegar a la página de impresión con los datos del recibo
+      const nuevoAbono = response.data;
+      const nuevoTotalAbonado = resumen.totalAbonado + abonoForm.monto;
+      const nuevoSaldoPendiente = resumen.saldoPendiente - abonoForm.monto;
+
+      // Calcular impuesto
+      const subtotal = pago.subtotal || resumen.totalPago;
+      const impuestoMonto = pago.total - subtotal;
+      const impuestoPorcentaje = subtotal > 0 ? (impuestoMonto / subtotal) * 100 : 0;
+
+      navigate(`/pagos/recibo/${nuevoAbono.id}`, {
+        state: {
+          abonoId: nuevoAbono.id,
+          monto: nuevoAbono.monto,
+          metodoPago: nuevoAbono.metodoPago,
+          fechaAbono: nuevoAbono.fechaAbono,
+          referencia: nuevoAbono.referencia,
+          nota: nuevoAbono.nota,
+          usuarioNombre: nuevoAbono.usuarioNombre,
+          pagoId: id,
+          numeroPago: pago.numeroPago,
+          planPagoNombre: pago.planPagoNombre,
+          subtotal: subtotal,
+          impuestoPorcentaje: Math.round(impuestoPorcentaje * 100) / 100,
+          impuestoMonto: impuestoMonto,
+          totalPago: resumen.totalPago,
+          totalAbonado: nuevoTotalAbonado,
+          saldoPendiente: nuevoSaldoPendiente,
+          estudianteNombre: pago.estudianteNombre,
+          estudianteApellidos: pago.estudianteApellidos,
+        },
+      });
     } catch (err: any) {
       console.error('Error al registrar abono:', err);
       setAbonoError(err.message || 'Error al registrar el abono');
@@ -203,24 +232,55 @@ export const ViewMatriculaPagoPage: React.FC = () => {
     }
   };
 
-  const handleDeleteAbono = async (abonoId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este abono?')) return;
-
-    setDeletingAbonoId(abonoId);
-    try {
-      await eliminarAbonoApi(abonoId);
-      await fetchData();
-    } catch (err: any) {
-      console.error('Error al eliminar abono:', err);
-      alert(err.message || 'Error al eliminar el abono');
-    } finally {
-      setDeletingAbonoId(null);
-    }
-  };
-
   const canAddAbono = pago && resumen &&
     (pago.estado === EstadoPago.PENDIENTE || pago.estado === EstadoPago.VENCIDO) &&
     resumen.saldoPendiente > 0;
+
+  const handleReimprimirAbono = (abono: Abono) => {
+    if (!pago || !resumen) return;
+
+    // Calcular el saldo pendiente al momento del abono
+    // Para esto necesitamos sumar los abonos anteriores a este
+    const abonosOrdenados = [...resumen.abonos].sort(
+      (a, b) => new Date(a.fechaAbono).getTime() - new Date(b.fechaAbono).getTime()
+    );
+
+    let totalAbonadoHastaEste = 0;
+    for (const a of abonosOrdenados) {
+      totalAbonadoHastaEste += a.monto;
+      if (a.id === abono.id) break;
+    }
+
+    const saldoPendienteAlMomento = resumen.totalPago - totalAbonadoHastaEste;
+
+    // Calcular impuesto
+    const subtotal = pago.subtotal || resumen.totalPago;
+    const impuestoMonto = pago.total - subtotal;
+    const impuestoPorcentaje = subtotal > 0 ? (impuestoMonto / subtotal) * 100 : 0;
+
+    navigate(`/pagos/recibo/${abono.id}`, {
+      state: {
+        abonoId: abono.id,
+        monto: abono.monto,
+        metodoPago: abono.metodoPago,
+        fechaAbono: abono.fechaAbono,
+        referencia: abono.referencia,
+        nota: abono.nota,
+        usuarioNombre: abono.usuarioNombre,
+        pagoId: id,
+        numeroPago: pago.numeroPago,
+        planPagoNombre: pago.planPagoNombre,
+        subtotal: subtotal,
+        impuestoPorcentaje: Math.round(impuestoPorcentaje * 100) / 100,
+        impuestoMonto: impuestoMonto,
+        totalPago: resumen.totalPago,
+        totalAbonado: totalAbonadoHastaEste,
+        saldoPendiente: saldoPendienteAlMomento,
+        estudianteNombre: pago.estudianteNombre,
+        estudianteApellidos: pago.estudianteApellidos,
+      },
+    });
+  };
 
   if (loading) {
     return (
@@ -409,16 +469,11 @@ export const ViewMatriculaPagoPage: React.FC = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleDeleteAbono(abono.id)}
-                    disabled={deletingAbonoId === abono.id}
-                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                    title="Eliminar abono"
+                    onClick={() => handleReimprimirAbono(abono)}
+                    className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition-colors"
+                    title="Reimprimir recibo"
                   >
-                    {deletingAbonoId === abono.id ? (
-                      <CgSpinner className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <FaTrash className="w-4 h-4" />
-                    )}
+                    <FaPrint className="w-4 h-4" />
                   </button>
                 </div>
               </div>

@@ -220,7 +220,7 @@ export const CrmTableroPage = () => {
               <HiTrendingUp className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Proceso de Ventas</h1>
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Etapa de Ventas</h1>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {totalLeads} prospectos · {formatCurrency(totalValor)} en seguimiento
               </p>

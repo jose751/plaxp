@@ -129,3 +129,31 @@ export const eliminarAbonoApi = async (
     `matriculas-pagos-abonos/${id}`
   );
 };
+
+/**
+ * Datos de empresa
+ */
+export interface EmpresaData {
+  id: string;
+  nombre: string;
+  identificacion: string;
+  correo: string;
+  telefono: string;
+  pathLogo: string | null;
+  estado: boolean;
+  fechaCreacion: string;
+}
+
+interface ObtenerEmpresaResponse {
+  success: boolean;
+  data: EmpresaData;
+  message: string;
+}
+
+/**
+ * Obtener datos de mi empresa
+ * GET /api/mi-empresa
+ */
+export const obtenerMiEmpresaApi = async (): Promise<ObtenerEmpresaResponse> => {
+  return await apiService.get<ObtenerEmpresaResponse>('mi-empresa');
+};

@@ -188,7 +188,7 @@ export const MatriculasPagosPage = () => {
 
   return (
     <PaginatedDataTable
-      title="Pagos de Matrículas"
+      title="Pagos"
       columns={columns}
       fetchDataFunction={fetchMatriculasPagos}
       onRowClick={handleRowClick}

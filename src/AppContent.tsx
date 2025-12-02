@@ -10,7 +10,7 @@ import { ProfesoresPage, CreateEditProfesorPage, ViewProfesorPage } from './feat
 import { SucursalesPage, CreateEditSucursalPage, ViewSucursalPage } from './features/sucursales';
 import { PeriodosLectivosPage, CreateEditPeriodoLectivoPage, ViewPeriodoLectivoPage } from './features/periodosLectivos';
 import { PlanesPagoPage, CreateEditPlanPagoPage, ViewPlanPagoPage } from './features/planesPago';
-import { MatriculasPagosPage, ViewMatriculaPagoPage } from './features/matriculasPagos';
+import { MatriculasPagosPage, ViewMatriculaPagoPage, PrintReciboPage } from './features/matriculasPagos';
 import { MatriculasPage, ViewMatriculaPage, CreateMatriculaPage } from './features/matriculas';
 import { CrmTableroPage, CrmEtapasPage, LeadsPage, LeadDetailPage, CalendarioPage } from './features/crm';
 import { ReportesPage } from './features/reportes';
@@ -397,6 +397,14 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <ViewMatriculaPagoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/pagos/recibo/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PrintReciboPage />
           </MainLayout>
         </ProtectedRoute>
       } />
