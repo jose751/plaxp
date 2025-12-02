@@ -12,7 +12,8 @@ import { PeriodosLectivosPage, CreateEditPeriodoLectivoPage, ViewPeriodoLectivoP
 import { PlanesPagoPage, CreateEditPlanPagoPage, ViewPlanPagoPage } from './features/planesPago';
 import { MatriculasPagosPage, ViewMatriculaPagoPage } from './features/matriculasPagos';
 import { MatriculasPage, ViewMatriculaPage, CreateMatriculaPage } from './features/matriculas';
-import { CrmTableroPage, CrmEtapasPage } from './features/crm';
+import { CrmTableroPage, CrmEtapasPage, LeadsPage, LeadDetailPage, CalendarioPage } from './features/crm';
+import { ReportesPage } from './features/reportes';
 import { LandingPage } from './features/homePage/pages/LandingPage';
 import { DemoPage } from './features/homePage/pages/DemoPage';
 import { DemoSchedulePage } from './features/homePage/pages/DemoSchedulePage';
@@ -413,6 +414,41 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <CrmEtapasPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Rutas de Leads CRM */}
+      <Route path="/crm/leads" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <LeadsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/crm/leads/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <LeadDetailPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Calendario CRM */}
+      <Route path="/crm/calendario" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CalendarioPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Reportes Financieros */}
+      <Route path="/reportes" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ReportesPage />
           </MainLayout>
         </ProtectedRoute>
       } />

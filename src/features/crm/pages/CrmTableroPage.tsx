@@ -26,7 +26,7 @@ import {
 import { listarCursosApi } from '../../cursos/api/cursosApi';
 import type { CrmTableroColumna, CrmLead, CrmEtapa } from '../types/crm.types';
 import type { Curso } from '../../cursos/types/curso.types';
-import { TipoSistema, RelacionContacto } from '../types/crm.types';
+import { TipoSistema, RelacionContacto, MedioContactoPreferido } from '../types/crm.types';
 import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Estado inicial del formulario
@@ -37,6 +37,7 @@ const initialLeadForm = {
   contactoTelefono: '',
   contactoEmail: '',
   contactoRelacion: RelacionContacto.PROPIO as string,
+  medioContactoPreferido: '' as string,
   // Alumno
   alumnoNombre: '',
   alumnoApellido: '',
@@ -212,6 +213,7 @@ export const CrmTableroPage = () => {
       contactoTelefono: lead.contacto.telefono || '',
       contactoEmail: lead.contacto.email || '',
       contactoRelacion: lead.contacto.relacion || RelacionContacto.PROPIO,
+      medioContactoPreferido: lead.contacto.medioPreferido || '',
       alumnoNombre: lead.alumno.nombre || '',
       alumnoApellido: lead.alumno.apellido || '',
       alumnoFechaNacimiento: lead.alumno.fechaNacimiento?.split('T')[0] || '',
@@ -224,35 +226,38 @@ export const CrmTableroPage = () => {
   };
 
   const handleSaveLead = async () => {
-    // Validaciones básicas - siempre requerimos datos del alumno
-    if (!leadForm.alumnoNombre.trim() || !leadForm.alumnoApellido.trim()) {
-      return;
-    }
-    // Si no es PROPIO, requerimos datos del contacto
-    const esPropio = leadForm.contactoRelacion === RelacionContacto.PROPIO;
-    if (!esPropio && (!leadForm.contactoNombre.trim() || !leadForm.contactoApellido.trim())) {
+    // Siempre requerimos datos del contacto
+    if (!leadForm.contactoNombre.trim() || !leadForm.contactoApellido.trim()) {
       return;
     }
 
     try {
       setLeadSaving(true);
 
-      // Si es PROPIO, usar datos del alumno como contacto
-      const contactoNombre = esPropio ? leadForm.alumnoNombre.trim() : leadForm.contactoNombre.trim();
-      const contactoApellido = esPropio ? leadForm.alumnoApellido.trim() : leadForm.contactoApellido.trim();
+      const esPropio = leadForm.contactoRelacion === RelacionContacto.PROPIO;
+
+      // Si es PROPIO (estudiante contacta directamente), los datos del alumno = datos del contacto
+      // Si NO es PROPIO (padre/madre/otro), los datos del alumno pueden estar vacíos o ser diferentes
+      const alumnoNombre = esPropio
+        ? leadForm.contactoNombre.trim()
+        : (leadForm.alumnoNombre.trim() || 'Por definir');
+      const alumnoApellido = esPropio
+        ? leadForm.contactoApellido.trim()
+        : (leadForm.alumnoApellido.trim() || 'Por definir');
 
       // Construir payload según estructura del API
       const payload = {
         contacto: {
-          nombre: contactoNombre,
-          apellido: contactoApellido,
+          nombre: leadForm.contactoNombre.trim(),
+          apellido: leadForm.contactoApellido.trim(),
           telefono: leadForm.contactoTelefono.trim() || undefined,
           email: leadForm.contactoEmail.trim() || undefined,
           relacion: leadForm.contactoRelacion as any,
+          medioPreferido: leadForm.medioContactoPreferido || undefined,
         },
         alumno: {
-          nombre: leadForm.alumnoNombre.trim(),
-          apellido: leadForm.alumnoApellido.trim(),
+          nombre: alumnoNombre,
+          apellido: alumnoApellido,
           fechaNacimiento: leadForm.alumnoFechaNacimiento || undefined,
         },
         negociacion: {
@@ -354,7 +359,7 @@ export const CrmTableroPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            Pipeline de Ventas
+            Etapas de Venta
           </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 hidden sm:block">
             Arrastra los prospectos entre las etapas para actualizar su estado
@@ -582,68 +587,21 @@ export const CrmTableroPage = () => {
             </div>
 
             <div className="p-4 sm:p-5 space-y-5 overflow-y-auto flex-1">
-              {/* Sección: Estudiante */}
+              {/* Sección: Contacto (PRIMERO) */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
-                  <FaChild className="w-4 h-4" />
-                  <h4 className="text-sm font-semibold">Datos del Estudiante</h4>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                      Nombre <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={leadForm.alumnoNombre}
-                      onChange={(e) => setLeadForm(prev => ({ ...prev, alumnoNombre: e.target.value }))}
-                      placeholder="Nombre"
-                      className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                      Apellido <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={leadForm.alumnoApellido}
-                      onChange={(e) => setLeadForm(prev => ({ ...prev, alumnoApellido: e.target.value }))}
-                      placeholder="Apellido"
-                      className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                    Fecha de nacimiento
-                  </label>
-                  <input
-                    type="date"
-                    value={leadForm.alumnoFechaNacimiento}
-                    onChange={(e) => setLeadForm(prev => ({ ...prev, alumnoFechaNacimiento: e.target.value }))}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              {/* Sección: Contacto */}
-              <div className="space-y-3 pt-3 border-t border-neutral-200 dark:border-dark-border">
-                <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
                   <FaUser className="w-4 h-4" />
-                  <h4 className="text-sm font-semibold">Contacto</h4>
+                  <h4 className="text-sm font-semibold">Datos del Contacto</h4>
                 </div>
 
                 {/* Tipo de relación */}
                 <div>
                   <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
-                    ¿Quién es el contacto? <span className="text-red-500">*</span>
+                    ¿Quién realiza el contacto? <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-4 gap-1.5">
                     {[
-                      { value: RelacionContacto.PROPIO, label: 'Propio' },
+                      { value: RelacionContacto.PROPIO, label: 'Estudiante' },
                       { value: RelacionContacto.PADRE, label: 'Padre' },
                       { value: RelacionContacto.MADRE, label: 'Madre' },
                       { value: RelacionContacto.OTRO, label: 'Otro' },
@@ -664,44 +622,37 @@ export const CrmTableroPage = () => {
                       </button>
                     ))}
                   </div>
-                  {leadForm.contactoRelacion === RelacionContacto.PROPIO && (
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5">
-                      El estudiante es su propio contacto
-                    </p>
-                  )}
                 </div>
 
-                {/* Campos de nombre/apellido solo si NO es PROPIO */}
-                {leadForm.contactoRelacion !== RelacionContacto.PROPIO && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                        Nombre <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={leadForm.contactoNombre}
-                        onChange={(e) => setLeadForm(prev => ({ ...prev, contactoNombre: e.target.value }))}
-                        placeholder="Nombre del contacto"
-                        className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
-                        Apellido <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={leadForm.contactoApellido}
-                        onChange={(e) => setLeadForm(prev => ({ ...prev, contactoApellido: e.target.value }))}
-                        placeholder="Apellido del contacto"
-                        className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      />
-                    </div>
+                {/* Nombre y Apellido del contacto */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                      Nombre <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={leadForm.contactoNombre}
+                      onChange={(e) => setLeadForm(prev => ({ ...prev, contactoNombre: e.target.value }))}
+                      placeholder="Nombre"
+                      className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                      Apellido <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={leadForm.contactoApellido}
+                      onChange={(e) => setLeadForm(prev => ({ ...prev, contactoApellido: e.target.value }))}
+                      placeholder="Apellido"
+                      className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+                </div>
 
-                {/* Teléfono y email siempre visibles */}
+                {/* Teléfono y email */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
@@ -728,7 +679,93 @@ export const CrmTableroPage = () => {
                     />
                   </div>
                 </div>
+
+                {/* Medio de contacto preferido */}
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+                    Medio de contacto preferido
+                  </label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { value: MedioContactoPreferido.TELEFONO, label: 'Teléfono' },
+                      { value: MedioContactoPreferido.WHATSAPP, label: 'WhatsApp' },
+                      { value: MedioContactoPreferido.CORREO, label: 'Correo' },
+                      { value: MedioContactoPreferido.PRESENCIAL, label: 'Presencial' },
+                    ].map((opcion) => (
+                      <button
+                        key={opcion.value}
+                        type="button"
+                        onClick={() => setLeadForm(prev => ({
+                          ...prev,
+                          medioContactoPreferido: prev.medioContactoPreferido === opcion.value ? '' : opcion.value
+                        }))}
+                        className={`
+                          px-2 py-2 rounded-lg text-xs font-medium transition-all border
+                          ${leadForm.medioContactoPreferido === opcion.value
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 border-neutral-300 dark:border-dark-border hover:border-primary/50'
+                          }
+                        `}
+                      >
+                        {opcion.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* Sección: Estudiante (solo si NO es el propio estudiante quien contacta) */}
+              {leadForm.contactoRelacion !== RelacionContacto.PROPIO && (
+                <div className="space-y-3 pt-3 border-t border-neutral-200 dark:border-dark-border">
+                  <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
+                    <FaChild className="w-4 h-4" />
+                    <h4 className="text-sm font-semibold">Datos del Estudiante</h4>
+                    <span className="text-xs text-neutral-400">(opcional)</span>
+                  </div>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                    Si aún no tienes los datos del estudiante, puedes dejarlos vacíos y completarlos después.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                        Nombre
+                      </label>
+                      <input
+                        type="text"
+                        value={leadForm.alumnoNombre}
+                        onChange={(e) => setLeadForm(prev => ({ ...prev, alumnoNombre: e.target.value }))}
+                        placeholder="Nombre del estudiante"
+                        className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                        Apellido
+                      </label>
+                      <input
+                        type="text"
+                        value={leadForm.alumnoApellido}
+                        onChange={(e) => setLeadForm(prev => ({ ...prev, alumnoApellido: e.target.value }))}
+                        placeholder="Apellido del estudiante"
+                        className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-400 mb-1">
+                      Fecha de nacimiento
+                    </label>
+                    <input
+                      type="date"
+                      value={leadForm.alumnoFechaNacimiento}
+                      onChange={(e) => setLeadForm(prev => ({ ...prev, alumnoFechaNacimiento: e.target.value }))}
+                      className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Sección: Negociación */}
               <div className="space-y-3 pt-3 border-t border-neutral-200 dark:border-dark-border">
@@ -802,9 +839,8 @@ export const CrmTableroPage = () => {
                 onClick={handleSaveLead}
                 disabled={
                   leadSaving ||
-                  !leadForm.alumnoNombre.trim() ||
-                  !leadForm.alumnoApellido.trim() ||
-                  (leadForm.contactoRelacion !== RelacionContacto.PROPIO && (!leadForm.contactoNombre.trim() || !leadForm.contactoApellido.trim()))
+                  !leadForm.contactoNombre.trim() ||
+                  !leadForm.contactoApellido.trim()
                 }
                 className="flex-1 px-3 sm:px-4 py-2 text-sm bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
               >

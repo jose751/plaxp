@@ -622,18 +622,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 className={`
                   group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
                   ${isCollapsed ? 'justify-center px-0' : 'px-3'}
-                  ${location.pathname.startsWith('/crm')
+                  ${location.pathname === '/crm'
                     ? 'bg-gradient-to-r from-pink-500/15 to-pink-500/5 text-pink-600 shadow-sm'
                     : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
                   }
                 `}
               >
-                {location.pathname.startsWith('/crm') && (
+                {location.pathname === '/crm' && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-pink-500 to-pink-600 rounded-r-full"></div>
                 )}
                 <div className={`
                   relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
-                  ${location.pathname.startsWith('/crm')
+                  ${location.pathname === '/crm'
                     ? 'bg-gradient-to-br from-pink-500 to-pink-600 shadow-md shadow-pink-500/30'
                     : 'bg-gradient-to-br from-pink-500 to-pink-600 shadow-md shadow-pink-500/20 group-hover:shadow-pink-500/30'
                   }
@@ -641,7 +641,75 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   <FaColumns className="w-4 h-4 text-white" />
                 </div>
                 <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
-                  Pipeline
+                  Etapa de Ventas
+                </span>
+              </Link>
+            )}
+
+            {/* Leads CRM */}
+            {hasPermission('crm.ver') && (
+              <Link
+                to="/crm/leads"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname.startsWith('/crm/leads')
+                    ? 'bg-gradient-to-r from-fuchsia-500/15 to-fuchsia-500/5 text-fuchsia-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname.startsWith('/crm/leads') && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-fuchsia-500 to-fuchsia-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname.startsWith('/crm/leads')
+                    ? 'bg-gradient-to-br from-fuchsia-500 to-fuchsia-600 shadow-md shadow-fuchsia-500/30'
+                    : 'bg-gradient-to-br from-fuchsia-500 to-fuchsia-600 shadow-md shadow-fuchsia-500/20 group-hover:shadow-fuchsia-500/30'
+                  }
+                `}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Leads
+                </span>
+              </Link>
+            )}
+
+            {/* Calendario CRM */}
+            {hasPermission('crm.ver') && (
+              <Link
+                to="/crm/calendario"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname === '/crm/calendario'
+                    ? 'bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-orange-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname === '/crm/calendario' && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-orange-500 to-orange-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname === '/crm/calendario'
+                    ? 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-md shadow-orange-500/30'
+                    : 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-md shadow-orange-500/20 group-hover:shadow-orange-500/30'
+                  }
+                `}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Calendario
                 </span>
               </Link>
             )}

@@ -611,9 +611,9 @@ const PaginatedDataTable = <T extends BaseItem>({
                                 <svg className="w-16 h-16 mx-auto mb-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
-                                <p className="text-lg font-semibold text-neutral-800 mb-2">No se encontraron resultados</p>
-                                <p className="text-sm text-neutral-600 mb-1">La búsqueda de <span className="font-semibold text-neutral-800">"{activeSearchTerm}"</span> no produjo coincidencias.</p>
-                                <p className="text-xs text-neutral-500 mt-3">Intente con otros términos de búsqueda</p>
+                                <p className="text-lg font-semibold text-neutral-800 dark:text-neutral-100 mb-2">No se encontraron resultados</p>
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">La búsqueda de <span className="font-semibold text-neutral-800 dark:text-neutral-100">"{activeSearchTerm}"</span> no produjo coincidencias.</p>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-3">Intente con otros términos de búsqueda</p>
                             </div>
                         ) : (
                             <>

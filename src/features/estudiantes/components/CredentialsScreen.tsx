@@ -183,10 +183,10 @@ export const CredentialsScreen: React.FC<CredentialsScreenProps> = ({ student })
         {/* Footer */}
         <div className="bg-neutral-50 dark:bg-neutral-800/50 px-4 py-3 border-t border-neutral-200 dark:border-dark-border rounded-b-xl flex justify-end">
           <button
-            onClick={() => navigate('/estudiantes')}
+            onClick={() => navigate(`/estudiantes/view/${student.id}`)}
             className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-sm"
           >
-            Cerrar
+            Ver Estudiante
           </button>
         </div>
       </div>

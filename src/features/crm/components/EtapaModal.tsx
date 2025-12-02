@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaClock, FaTrophy, FaThumbsDown } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import {
@@ -29,6 +29,13 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
     activo: true,
   });
 
+  // Ref para mantener el valor más reciente del formData
+  const formDataRef = useRef(formData);
+  useEffect(() => {
+    formDataRef.current = formData;
+    console.log('📝 formData actualizado:', formData.tipoSistema);
+  }, [formData]);
+
   useEffect(() => {
     if (isOpen) {
       if (etapaId) {
@@ -53,10 +60,12 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
       const response = await obtenerEtapaPorIdApi(id);
       if (response.success) {
         const etapa = response.data;
+        // Normalizar tipoSistema a uppercase para coincidir con el enum
+        const tipoNormalizado = (etapa.tipoSistema?.toUpperCase() || TipoSistema.PROCESO) as TipoSistema;
         setFormData({
           nombre: etapa.nombre,
           color: etapa.color,
-          tipoSistema: etapa.tipoSistema,
+          tipoSistema: tipoNormalizado,
           activo: etapa.activo,
         });
       } else {
@@ -71,13 +80,21 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Usar el ref para obtener el valor más reciente
+    const currentFormData = formDataRef.current;
+
+    console.log('🚀 handleSubmit iniciado');
+    console.log('🚀 formData (closure):', formData.tipoSistema);
+    console.log('🚀 formDataRef (ref):', currentFormData.tipoSistema);
+
     setError(null);
 
-    if (!formData.nombre.trim()) {
+    if (!currentFormData.nombre.trim()) {
       setError('El nombre es requerido');
       return;
     }
-    if (formData.nombre.trim().length < 2) {
+    if (currentFormData.nombre.trim().length < 2) {
       setError('El nombre debe tener al menos 2 caracteres');
       return;
     }
@@ -86,11 +103,13 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
       setSaving(true);
 
       const payload = {
-        nombre: formData.nombre.trim(),
-        color: formData.color,
-        tipoSistema: formData.tipoSistema,
-        activo: formData.activo,
+        nombre: currentFormData.nombre.trim(),
+        color: currentFormData.color,
+        tipoSistema: currentFormData.tipoSistema,
+        activo: currentFormData.activo,
       };
+
+      console.log('📤 Payload:', JSON.stringify(payload));
 
       if (isEditing && etapaId) {
         const response = await actualizarEtapaApi(etapaId, payload);
@@ -198,7 +217,10 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
                   <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                     <button
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PROCESO }))}
+                      onClick={() => {
+                        console.log('🔵 Click PROCESO');
+                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PROCESO }));
+                      }}
                       className={`
                         p-2 sm:p-3 rounded-lg border-2 text-center transition-all
                         ${formData.tipoSistema === TipoSistema.PROCESO
@@ -217,7 +239,10 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
 
                     <button
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.GANADO }))}
+                      onClick={() => {
+                        console.log('🟢 Click GANADO');
+                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.GANADO }));
+                      }}
                       className={`
                         p-2 sm:p-3 rounded-lg border-2 text-center transition-all
                         ${formData.tipoSistema === TipoSistema.GANADO
@@ -236,7 +261,10 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
 
                     <button
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PERDIDO }))}
+                      onClick={() => {
+                        console.log('🔴 Click PERDIDO');
+                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PERDIDO }));
+                      }}
                       className={`
                         p-2 sm:p-3 rounded-lg border-2 text-center transition-all
                         ${formData.tipoSistema === TipoSistema.PERDIDO

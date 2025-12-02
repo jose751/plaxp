@@ -328,7 +328,7 @@ export const CrmEtapasPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-              Etapas del Pipeline
+              Etapas de Venta
             </h1>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               Configura las etapas por las que pasan tus prospectos. Arrastra para reordenar.

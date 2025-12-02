@@ -45,6 +45,18 @@ export const RelacionContacto = {
 export type RelacionContacto = (typeof RelacionContacto)[keyof typeof RelacionContacto];
 
 /**
+ * Medio de contacto preferido
+ */
+export const MedioContactoPreferido = {
+  TELEFONO: 'TELEFONO',
+  WHATSAPP: 'WHATSAPP',
+  CORREO: 'CORREO',
+  PRESENCIAL: 'PRESENCIAL',
+} as const;
+
+export type MedioContactoPreferido = (typeof MedioContactoPreferido)[keyof typeof MedioContactoPreferido];
+
+/**
  * Contacto del lead (respuesta del API)
  */
 export interface CrmLeadContacto {
@@ -53,6 +65,7 @@ export interface CrmLeadContacto {
   telefono: string | null;
   email: string | null;
   relacion: RelacionContacto;
+  medioPreferido: MedioContactoPreferido | null;
 }
 
 /**
@@ -206,6 +219,7 @@ export interface LeadContactoInput {
   telefono?: string;
   email?: string;
   relacion: RelacionContacto;
+  medioPreferido?: MedioContactoPreferido;
 }
 
 /**
@@ -299,3 +313,185 @@ export const COLORES_ETAPA = [
   { value: '#06B6D4', label: 'Cyan', class: 'bg-cyan-500' },
   { value: '#6366F1', label: 'Indigo', class: 'bg-indigo-500' },
 ];
+
+// ==================== TIPOS DE ACTIVIDAD ====================
+
+/**
+ * Tipos de actividad del CRM
+ */
+export const TipoActividad = {
+  NOTA: 'NOTA',
+  LLAMADA: 'LLAMADA',
+  CORREO: 'CORREO',
+  WHATSAPP: 'WHATSAPP',
+  REUNION: 'REUNION',
+  TAREA: 'TAREA',
+  CAMBIO_ETAPA: 'CAMBIO_ETAPA',
+} as const;
+
+export type TipoActividad = (typeof TipoActividad)[keyof typeof TipoActividad];
+
+/**
+ * Roles de asignación de lead
+ */
+export const RolAsignacion = {
+  PRINCIPAL: 'PRINCIPAL',
+  COLABORADOR: 'COLABORADOR',
+} as const;
+
+export type RolAsignacion = (typeof RolAsignacion)[keyof typeof RolAsignacion];
+
+/**
+ * Participante de una actividad
+ */
+export interface CrmActividadParticipante {
+  actividadId: string;
+  usuarioId: string;
+  asignadoEn: string;
+  usuarioNombre?: string;
+}
+
+/**
+ * Actividad del CRM (timeline)
+ */
+export interface CrmActividad {
+  id: string;
+  empresaId: string;
+  leadId: string;
+  tipo: TipoActividad;
+  contenido: string;
+  fechaInicio: string;
+  fechaFin: string;
+  resultado: string | null;
+  esNotaAcademica: boolean;
+  fechaCreacion: string;
+  participantes?: CrmActividadParticipante[];
+}
+
+/**
+ * Asignación de usuario a un lead
+ */
+export interface CrmLeadAsignacion {
+  leadId: string;
+  usuarioId: string;
+  rol: RolAsignacion;
+  asignadoEn: string;
+  usuarioNombre?: string;
+}
+
+// ==================== RESPUESTAS DE API LEADS ====================
+
+/**
+ * Respuesta de listar leads
+ * GET /api/crm/leads
+ */
+export interface ListarLeadsResponse {
+  success: boolean;
+  message?: string;
+  data: CrmLead[];
+  paginacion: {
+    total: number;
+    pagina: number;
+    limite: number;
+    totalPaginas: number;
+  };
+}
+
+/**
+ * Respuesta de obtener lead por ID
+ * GET /api/crm/leads/{id}
+ */
+export interface ObtenerLeadResponse {
+  success: boolean;
+  message?: string;
+  data: CrmLead;
+}
+
+/**
+ * Filtros para listar leads
+ */
+export interface FiltrosListarLeads {
+  soloMisLeads?: boolean;
+  etapaId?: string;
+  origen?: string;
+  busqueda?: string;
+  pagina?: number;
+  limite?: number;
+}
+
+// ==================== RESPUESTAS DE API ACTIVIDADES ====================
+
+/**
+ * Datos para crear una actividad
+ * POST /api/crm/leads/{id}/actividades
+ */
+export interface CrearActividadData {
+  tipo: TipoActividad;
+  contenido: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  participantesUsuarioIds?: string[];
+  resultado?: string;
+  esNotaAcademica?: boolean;
+}
+
+/**
+ * Respuesta de crear actividad
+ */
+export interface CrearActividadResponse {
+  success: boolean;
+  message: string;
+  data: CrmActividad;
+}
+
+/**
+ * Respuesta de obtener timeline
+ * GET /api/crm/leads/{id}/timeline
+ */
+export interface ObtenerTimelineResponse {
+  success: boolean;
+  message?: string;
+  data: CrmActividad[];
+}
+
+/**
+ * Datos para asignar usuarios a un lead
+ * POST /api/crm/leads/{id}/asignar
+ */
+export interface AsignarLeadData {
+  usuarioIds: string[];
+  rol?: RolAsignacion;
+  sobrescribir?: boolean;
+}
+
+/**
+ * Respuesta de asignar lead
+ */
+export interface AsignarLeadResponse {
+  success: boolean;
+  message: string;
+  data: CrmLeadAsignacion[];
+}
+
+/**
+ * Datos para actualizar una actividad
+ * PUT /api/crm/actividades/{id}
+ */
+export interface ActualizarActividadData {
+  tipo?: TipoActividad;
+  contenido?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  participantesUsuarioIds?: string[];
+  resultado?: string;
+  esNotaAcademica?: boolean;
+}
+
+/**
+ * Respuesta de actualizar actividad
+ */
+export interface ActualizarActividadResponse {
+  success: boolean;
+  message: string;
+  data: CrmActividad;
+}

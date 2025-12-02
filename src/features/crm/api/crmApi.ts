@@ -15,6 +15,16 @@ import type {
   EliminarLeadResponse,
   MoverLeadData,
   MoverLeadResponse,
+  ListarLeadsResponse,
+  ObtenerLeadResponse,
+  FiltrosListarLeads,
+  CrearActividadData,
+  CrearActividadResponse,
+  ObtenerTimelineResponse,
+  AsignarLeadData,
+  AsignarLeadResponse,
+  ActualizarActividadData,
+  ActualizarActividadResponse,
 } from '../types/crm.types';
 
 // ==================== ETAPAS ====================
@@ -120,4 +130,89 @@ export const moverLeadApi = async (
   data: MoverLeadData
 ): Promise<MoverLeadResponse> => {
   return await apiService.patch<MoverLeadResponse>(`crm/leads/${id}/mover`, data);
+};
+
+/**
+ * Listar leads con filtros y paginación
+ * GET /api/crm/leads
+ */
+export const listarLeadsApi = async (
+  filtros?: FiltrosListarLeads
+): Promise<ListarLeadsResponse> => {
+  const params = new URLSearchParams();
+
+  if (filtros?.soloMisLeads) params.append('soloMisLeads', 'true');
+  if (filtros?.etapaId) params.append('etapaId', filtros.etapaId);
+  if (filtros?.origen) params.append('origen', filtros.origen);
+  if (filtros?.busqueda) params.append('busqueda', filtros.busqueda);
+  if (filtros?.pagina) params.append('pagina', filtros.pagina.toString());
+  if (filtros?.limite) params.append('limite', filtros.limite.toString());
+
+  const queryString = params.toString();
+  const url = queryString ? `crm/leads?${queryString}` : 'crm/leads';
+
+  return await apiService.get<ListarLeadsResponse>(url);
+};
+
+/**
+ * Obtener un lead por ID
+ * GET /api/crm/leads/{id}
+ */
+export const obtenerLeadPorIdApi = async (
+  id: string
+): Promise<ObtenerLeadResponse> => {
+  return await apiService.get<ObtenerLeadResponse>(`crm/leads/${id}`);
+};
+
+/**
+ * Asignar usuarios a un lead
+ * POST /api/crm/leads/{id}/asignar
+ */
+export const asignarLeadApi = async (
+  id: string,
+  data: AsignarLeadData
+): Promise<AsignarLeadResponse> => {
+  return await apiService.post<AsignarLeadResponse>(`crm/leads/${id}/asignar`, data);
+};
+
+// ==================== ACTIVIDADES ====================
+
+/**
+ * Crear una actividad en el timeline de un lead
+ * POST /api/crm/leads/{id}/actividades
+ */
+export const crearActividadApi = async (
+  leadId: string,
+  data: CrearActividadData
+): Promise<CrearActividadResponse> => {
+  return await apiService.post<CrearActividadResponse>(`crm/leads/${leadId}/actividades`, data);
+};
+
+/**
+ * Obtener el timeline de actividades de un lead
+ * GET /api/crm/leads/{id}/timeline
+ */
+export const obtenerTimelineApi = async (
+  leadId: string
+): Promise<ObtenerTimelineResponse> => {
+  return await apiService.get<ObtenerTimelineResponse>(`crm/leads/${leadId}/timeline`);
+};
+
+/**
+ * Actualizar una actividad existente
+ * PUT /api/crm/actividades/{id}
+ */
+export const actualizarActividadApi = async (
+  actividadId: string,
+  data: ActualizarActividadData
+): Promise<ActualizarActividadResponse> => {
+  return await apiService.put<ActualizarActividadResponse>(`crm/actividades/${actividadId}`, data);
+};
+
+/**
+ * Obtener actividades pendientes del usuario actual
+ * GET /api/crm/actividades/pendientes
+ */
+export const obtenerMisPendientesApi = async (): Promise<ObtenerTimelineResponse> => {
+  return await apiService.get<ObtenerTimelineResponse>('crm/actividades/pendientes');
 };
