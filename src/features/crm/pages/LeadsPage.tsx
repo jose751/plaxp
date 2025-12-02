@@ -18,6 +18,7 @@ import { listarCursosApi } from '../../cursos/api/cursosApi';
 import type { CrmLead, CrmEtapa } from '../types/crm.types';
 import type { Curso } from '../../cursos/types/curso.types';
 import { RelacionContacto, MedioContactoPreferido } from '../types/crm.types';
+import type { MedioContactoPreferido as MedioContactoPreferidoType } from '../types/crm.types';
 import { usePermissions } from '../../../shared/hooks/usePermissions';
 
 // Estado inicial del formulario
@@ -59,14 +60,25 @@ interface LeadTableItem extends BaseItem {
   nombreContacto: string;
   alumno: string;
   telefono: string;
+  whatsapp: JSX.Element;
   correo: string;
   etapa: JSX.Element;
   origen: string;
   fechaCreacion: string;
 }
 
+// URL del logo de WhatsApp
+const WHATSAPP_LOGO = 'https://static.vecteezy.com/system/resources/previews/021/491/992/original/whatsapp-logo-tansparent-free-png.png';
+
+// Función para limpiar número de teléfono para WhatsApp
+const cleanPhoneForWhatsApp = (phone: string): string => {
+  // Eliminar todos los caracteres no numéricos (incluyendo el +)
+  return phone.replace(/\D/g, '');
+};
+
 // Definir columnas
 const columns: ColumnDefinition<LeadTableItem>[] = [
+  { key: 'whatsapp', header: '' },
   { key: 'contacto', header: 'Contacto' },
   { key: 'alumno', header: 'Alumno' },
   { key: 'telefono', header: 'Teléfono' },
@@ -210,12 +222,34 @@ export const LeadsPage = () => {
           </span>
         );
 
+        // Botón de WhatsApp
+        const telefono = lead.contacto.telefono;
+        const whatsappCell = telefono ? (
+          <a
+            href={`https://wa.me/${cleanPhoneForWhatsApp(telefono)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full overflow-hidden hover:scale-125 transition-transform"
+            title={`Enviar WhatsApp a ${telefono}`}
+          >
+            <img
+              src={WHATSAPP_LOGO}
+              alt="WhatsApp"
+              className="w-16 h-16 object-cover scale-150"
+            />
+          </a>
+        ) : (
+          <span className="text-neutral-300 dark:text-neutral-600 text-sm">-</span>
+        );
+
         return {
           id: lead.id,
           contacto: contactoCell,
           nombreContacto,
           alumno: nombreAlumno,
           telefono: lead.contacto.telefono || 'N/A',
+          whatsapp: whatsappCell,
           correo: lead.contacto.email || 'N/A',
           etapa: etapaBadge,
           origen: lead.negociacion.origen || 'Manual',
@@ -284,7 +318,7 @@ export const LeadsPage = () => {
           telefono: leadForm.contactoTelefono.trim() || undefined,
           email: leadForm.contactoEmail.trim() || undefined,
           relacion: leadForm.contactoRelacion as any,
-          medioPreferido: leadForm.medioContactoPreferido || undefined,
+          medioPreferido: (leadForm.medioContactoPreferido || undefined) as MedioContactoPreferidoType | undefined,
         },
         alumno: {
           nombre: alumnoNombre,

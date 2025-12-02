@@ -5,15 +5,15 @@ import { CgSpinner } from 'react-icons/cg';
 import {
   obtenerLeadPorIdApi,
   obtenerTimelineApi,
-  crearActividadApi,
-  actualizarActividadApi,
-  eliminarLeadApi,
   listarEtapasApi,
   moverLeadApi,
-  asignarLeadApi
 } from '../api/crmApi';
 import { listarUsuariosApi } from '../../users/api/UsersApi';
 import type { CrmLead, CrmActividad, CrmEtapa, TipoActividad, CrmLeadAsignacion } from '../types/crm.types';
+import { ActividadFormModal } from '../components/ActividadFormModal';
+import { ActividadDetallesModal } from '../components/ActividadDetallesModal';
+import { AsignarLeadModal } from '../components/AsignarLeadModal';
+import { DeleteLeadModal } from '../components/DeleteLeadModal';
 
 interface Usuario {
   id: string;
@@ -22,13 +22,13 @@ interface Usuario {
 }
 
 // Configuración de tipos de actividad
-const TIPOS_ACTIVIDAD: { tipo: TipoActividad; label: string; icon: React.ReactNode; color: string; requiereFecha: boolean }[] = [
-  { tipo: 'NOTA', label: 'Nota', icon: <FaStickyNote />, color: 'amber', requiereFecha: false },
-  { tipo: 'LLAMADA', label: 'Llamada', icon: <FaPhone />, color: 'green', requiereFecha: false },
-  { tipo: 'CORREO', label: 'Correo', icon: <FaEnvelope />, color: 'blue', requiereFecha: false },
-  { tipo: 'WHATSAPP', label: 'WhatsApp', icon: <FaWhatsapp />, color: 'emerald', requiereFecha: false },
-  { tipo: 'REUNION', label: 'Reunión', icon: <FaCalendarAlt />, color: 'purple', requiereFecha: true },
-  { tipo: 'TAREA', label: 'Tarea', icon: <FaClipboard />, color: 'orange', requiereFecha: true },
+const TIPOS_ACTIVIDAD: { tipo: TipoActividad; label: string; icon: React.ReactNode; color: string }[] = [
+  { tipo: 'NOTA', label: 'Nota', icon: <FaStickyNote />, color: 'amber' },
+  { tipo: 'LLAMADA', label: 'Llamada', icon: <FaPhone />, color: 'green' },
+  { tipo: 'CORREO', label: 'Correo', icon: <FaEnvelope />, color: 'blue' },
+  { tipo: 'WHATSAPP', label: 'WhatsApp', icon: <FaWhatsapp />, color: 'emerald' },
+  { tipo: 'REUNION', label: 'Reunión', icon: <FaCalendarAlt />, color: 'purple' },
+  { tipo: 'TAREA', label: 'Tarea', icon: <FaClipboard />, color: 'orange' },
 ];
 
 // Tabs de filtro de actividades
@@ -55,19 +55,15 @@ export const LeadDetailPage = () => {
 
   // Estados de UI
   const [activeTab, setActiveTab] = useState<string>('todos');
+
+  // Estados de modales
   const [showActividadModal, setShowActividadModal] = useState(false);
-  const [showAsignarLeadModal, setShowAsignarLeadModal] = useState(false);
+  const [showActividadDetalles, setShowActividadDetalles] = useState(false);
+  const [showAsignarModal, setShowAsignarModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [actividadTipo, setActividadTipo] = useState<TipoActividad>('NOTA');
-  const [actividadContenido, setActividadContenido] = useState('');
-  const [actividadFechaInicio, setActividadFechaInicio] = useState('');
-  const [actividadFechaFin, setActividadFechaFin] = useState('');
-  const [actividadParticipantes, setActividadParticipantes] = useState<string[]>([]);
-  const [creandoActividad, setCreandoActividad] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [asignandoLead, setAsignandoLead] = useState(false);
-  const [selectedUsuariosLead, setSelectedUsuariosLead] = useState<string[]>([]);
-  const [editandoActividadId, setEditandoActividadId] = useState<string | null>(null);
+  const [actividadEditar, setActividadEditar] = useState<CrmActividad | null>(null);
+  const [actividadSeleccionada, setActividadSeleccionada] = useState<CrmActividad | null>(null);
 
   // Cargar datos
   useEffect(() => {
@@ -87,10 +83,6 @@ export const LeadDetailPage = () => {
 
         if (leadRes.success) {
           setLead(leadRes.data);
-          // Inicializar usuarios asignados
-          if (leadRes.data.asignaciones) {
-            setSelectedUsuariosLead(leadRes.data.asignaciones.map((a: CrmLeadAsignacion) => a.usuarioId));
-          }
         } else {
           setError('No se pudo cargar el lead');
         }
@@ -131,146 +123,49 @@ export const LeadDetailPage = () => {
     return TIPOS_ACTIVIDAD.find(t => t.tipo === tipo) || TIPOS_ACTIVIDAD[0];
   };
 
-  // Resetear formulario de actividad
-  const resetActividadForm = () => {
-    setActividadContenido('');
-    setActividadFechaInicio('');
-    setActividadFechaFin('');
-    setActividadParticipantes([]);
-    setEditandoActividadId(null);
-  };
-
-  // Convertir fecha ISO a formato datetime-local
-  const toDatetimeLocal = (isoDate: string): string => {
-    if (!isoDate) return '';
-    const date = new Date(isoDate);
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - offset * 60 * 1000);
-    return localDate.toISOString().slice(0, 16);
-  };
-
-  // Abrir modal para editar actividad
-  const handleEditarActividad = (actividad: CrmActividad) => {
-    setEditandoActividadId(actividad.id);
-    setActividadTipo(actividad.tipo);
-    setActividadContenido(actividad.contenido);
-    setActividadFechaInicio(actividad.fechaInicio ? toDatetimeLocal(actividad.fechaInicio) : '');
-    setActividadFechaFin(actividad.fechaFin ? toDatetimeLocal(actividad.fechaFin) : '');
-    setActividadParticipantes(actividad.participantes?.map(p => p.usuarioId) || []);
+  // Abrir modal para nueva actividad
+  const handleNuevaActividad = (tipo: TipoActividad) => {
+    setActividadTipo(tipo);
+    setActividadEditar(null);
     setShowActividadModal(true);
   };
 
-  // Convertir fecha local a ISO 8601 con Z (UTC)
-  const toISOString = (localDateTime: string): string => {
-    if (!localDateTime) return '';
-    const date = new Date(localDateTime);
-    return date.toISOString();
+  // Ver detalles de actividad
+  const handleVerActividad = (actividad: CrmActividad) => {
+    setActividadSeleccionada(actividad);
+    setShowActividadDetalles(true);
   };
 
-  // Crear o actualizar actividad
-  const handleGuardarActividad = async () => {
-    if (!id || !actividadContenido.trim()) return;
+  // Abrir modal para editar actividad (desde detalles o directamente)
+  const handleEditarActividad = (actividad: CrmActividad) => {
+    setActividadSeleccionada(null);
+    setShowActividadDetalles(false);
+    setActividadEditar(actividad);
+    setActividadTipo(actividad.tipo);
+    setShowActividadModal(true);
+  };
 
-    const tipoConfig = getTipoConfig(actividadTipo);
-
-    // Validar fechas para tareas y reuniones
-    if (tipoConfig.requiereFecha && (!actividadFechaInicio || !actividadFechaFin)) {
-      alert('Las tareas y reuniones requieren fecha de inicio y fin');
-      return;
-    }
-
-    // Validar que fecha fin sea posterior a fecha inicio
-    if (tipoConfig.requiereFecha && actividadFechaInicio && actividadFechaFin) {
-      if (new Date(actividadFechaFin) <= new Date(actividadFechaInicio)) {
-        alert('La fecha de fin debe ser posterior a la fecha de inicio');
-        return;
-      }
-    }
-
-    setCreandoActividad(true);
-    try {
-      if (editandoActividadId) {
-        // Actualizar actividad existente
-        // Siempre enviar la lista de participantes para permitir agregar/quitar
-        const response = await actualizarActividadApi(editandoActividadId, {
-          tipo: actividadTipo,
-          contenido: actividadContenido.trim(),
-          fechaInicio: actividadFechaInicio ? toISOString(actividadFechaInicio) : undefined,
-          fechaFin: actividadFechaFin ? toISOString(actividadFechaFin) : undefined,
-          participantesUsuarioIds: actividadParticipantes, // Siempre enviar, incluso si está vacío
-        });
-
-        if (response.success) {
-          // Actualizar la actividad en la lista
-          setActividades(prev => prev.map(a => a.id === editandoActividadId ? response.data : a));
-          resetActividadForm();
-          setShowActividadModal(false);
-        }
-      } else {
-        // Crear nueva actividad
-        const response = await crearActividadApi(id, {
-          tipo: actividadTipo,
-          contenido: actividadContenido.trim(),
-          fechaInicio: actividadFechaInicio ? toISOString(actividadFechaInicio) : undefined,
-          fechaFin: actividadFechaFin ? toISOString(actividadFechaFin) : undefined,
-          participantesUsuarioIds: actividadParticipantes.length > 0 ? actividadParticipantes : undefined,
-        });
-
-        if (response.success) {
-          setActividades(prev => [response.data, ...prev]);
-          resetActividadForm();
-          setShowActividadModal(false);
-        }
-      }
-    } catch (err) {
-      console.error('Error guardando actividad:', err);
-    } finally {
-      setCreandoActividad(false);
+  // Callback cuando se guarda actividad
+  const handleActividadSuccess = (actividad: CrmActividad, isEdit: boolean) => {
+    if (isEdit) {
+      setActividades(prev => prev.map(a => a.id === actividad.id ? actividad : a));
+    } else {
+      setActividades(prev => [actividad, ...prev]);
     }
   };
 
-  // Asignar lead a usuarios
-  const handleAsignarLead = async () => {
-    if (!id || selectedUsuariosLead.length === 0) return;
-
-    setAsignandoLead(true);
-    try {
-      const response = await asignarLeadApi(id, {
-        usuarioIds: selectedUsuariosLead,
-        sobrescribir: true
-      });
-
-      if (response.success) {
-        // Recargar lead para actualizar asignaciones
-        const leadRes = await obtenerLeadPorIdApi(id);
-        if (leadRes.success) {
-          setLead(leadRes.data);
-        }
-        setShowAsignarLeadModal(false);
-      }
-    } catch (err) {
-      console.error('Error asignando lead:', err);
-    } finally {
-      setAsignandoLead(false);
-    }
-  };
-
-  // Eliminar lead
-  const handleEliminarLead = async () => {
+  // Callback cuando se asigna el lead
+  const handleAsignarSuccess = async () => {
     if (!id) return;
-
-    setDeleting(true);
-    try {
-      const response = await eliminarLeadApi(id);
-      if (response.success) {
-        navigate('/crm/leads');
-      }
-    } catch (err) {
-      console.error('Error eliminando lead:', err);
-    } finally {
-      setDeleting(false);
-      setShowDeleteConfirm(false);
+    const leadRes = await obtenerLeadPorIdApi(id);
+    if (leadRes.success) {
+      setLead(leadRes.data);
     }
+  };
+
+  // Callback cuando se elimina el lead
+  const handleDeleteSuccess = () => {
+    navigate('/crm/leads');
   };
 
   // Cambiar etapa
@@ -304,24 +199,6 @@ export const LeadDetailPage = () => {
     });
   };
 
-  // Toggle participante en actividad
-  const toggleParticipante = (usuarioId: string) => {
-    setActividadParticipantes(prev =>
-      prev.includes(usuarioId)
-        ? prev.filter(id => id !== usuarioId)
-        : [...prev, usuarioId]
-    );
-  };
-
-  // Toggle usuario asignado al lead
-  const toggleUsuarioLead = (usuarioId: string) => {
-    setSelectedUsuariosLead(prev =>
-      prev.includes(usuarioId)
-        ? prev.filter(id => id !== usuarioId)
-        : [...prev, usuarioId]
-    );
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center h-96 space-y-3">
@@ -349,7 +226,7 @@ export const LeadDetailPage = () => {
 
   const etapaActual = lead.negociacion.etapa;
   const etapaColor = etapaActual?.color || '#6366F1';
-  const tipoActividadConfig = getTipoConfig(actividadTipo);
+  const usuariosAsignados = lead.asignaciones?.map((a: CrmLeadAsignacion) => a.usuarioId) || [];
 
   return (
     <div className="min-h-screen">
@@ -398,11 +275,7 @@ export const LeadDetailPage = () => {
                 {TIPOS_ACTIVIDAD.map(({ tipo, label, icon }) => (
                   <button
                     key={tipo}
-                    onClick={() => {
-                      setActividadTipo(tipo);
-                      resetActividadForm();
-                      setShowActividadModal(true);
-                    }}
+                    onClick={() => handleNuevaActividad(tipo)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg border border-neutral-200 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:border-primary hover:text-primary transition-all text-sm font-medium"
                     title={`Agregar ${label}`}
                   >
@@ -463,7 +336,7 @@ export const LeadDetailPage = () => {
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-neutral-400 dark:text-neutral-500">Asignado a</p>
                       <button
-                        onClick={() => setShowAsignarLeadModal(true)}
+                        onClick={() => setShowAsignarModal(true)}
                         className="p-1 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded transition-colors text-primary"
                         title="Asignar lead"
                       >
@@ -551,7 +424,7 @@ export const LeadDetailPage = () => {
               {/* Botón eliminar */}
               <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-dark-border">
                 <button
-                  onClick={() => setShowDeleteConfirm(true)}
+                  onClick={() => setShowDeleteModal(true)}
                   className="flex items-center gap-2 text-red-600 dark:text-red-400 hover:text-red-700 text-sm font-medium"
                 >
                   <FaTrash className="w-3.5 h-3.5" />
@@ -564,9 +437,9 @@ export const LeadDetailPage = () => {
 
         {/* Panel Derecho - Timeline */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-neutral-200 dark:border-dark-border overflow-hidden">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-neutral-200 dark:border-dark-border overflow-hidden flex flex-col max-h-[calc(100vh-120px)]">
             {/* Tabs de actividades */}
-            <div className="border-b border-neutral-200 dark:border-dark-border">
+            <div className="border-b border-neutral-200 dark:border-dark-border flex-shrink-0">
               <div className="flex overflow-x-auto">
                 {TABS_ACTIVIDAD.map(tab => (
                   <button
@@ -584,8 +457,8 @@ export const LeadDetailPage = () => {
               </div>
             </div>
 
-            {/* Lista de actividades */}
-            <div className="p-6">
+            {/* Lista de actividades - con scroll interno */}
+            <div className="p-6 overflow-y-auto flex-1">
               {actividadesFiltradas.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 mx-auto mb-4 bg-neutral-100 dark:bg-dark-hover rounded-full flex items-center justify-center">
@@ -608,7 +481,8 @@ export const LeadDetailPage = () => {
                     return (
                       <div
                         key={actividad.id}
-                        className="flex gap-4 p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl border border-neutral-100 dark:border-dark-border hover:shadow-md transition-shadow group"
+                        onClick={() => handleVerActividad(actividad)}
+                        className="flex gap-4 p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl border border-neutral-100 dark:border-dark-border hover:shadow-md transition-shadow group cursor-pointer"
                       >
                         {/* Icono */}
                         <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-neutral-400">
@@ -652,7 +526,10 @@ export const LeadDetailPage = () => {
                         {/* Botón editar (visible on hover, oculto para CAMBIO_ETAPA) */}
                         {actividad.tipo !== 'CAMBIO_ETAPA' && (
                           <button
-                            onClick={() => handleEditarActividad(actividad)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditarActividad(actividad);
+                            }}
                             className="self-start p-2 text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-all opacity-0 group-hover:opacity-100"
                             title="Editar actividad"
                           >
@@ -669,237 +546,45 @@ export const LeadDetailPage = () => {
         </div>
       </div>
 
-      {/* Modal de crear/editar actividad */}
-      {showActividadModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-neutral-200 dark:border-dark-border">
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                {editandoActividadId ? 'Editar' : 'Agregar'} {tipoActividadConfig.label}
-              </h3>
-            </div>
+      {/* Modales */}
+      <ActividadFormModal
+        isOpen={showActividadModal}
+        onClose={() => {
+          setShowActividadModal(false);
+          setActividadEditar(null);
+        }}
+        onSuccess={handleActividadSuccess}
+        leadId={id || ''}
+        usuarios={usuarios}
+        actividad={actividadEditar}
+        tipoInicial={actividadTipo}
+      />
 
-            <div className="p-6 space-y-4">
-              {/* Selector de tipo */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Tipo de actividad
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {TIPOS_ACTIVIDAD.map(({ tipo, label, icon }) => (
-                    <button
-                      key={tipo}
-                      onClick={() => setActividadTipo(tipo)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all
-                        ${actividadTipo === tipo
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-neutral-300 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:border-primary/50'
-                        }`}
-                    >
-                      {icon}
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+      <AsignarLeadModal
+        isOpen={showAsignarModal}
+        onClose={() => setShowAsignarModal(false)}
+        onSuccess={handleAsignarSuccess}
+        leadId={id || ''}
+        usuarios={usuarios}
+        usuariosAsignados={usuariosAsignados}
+      />
 
-              {/* Contenido */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Contenido
-                </label>
-                <textarea
-                  value={actividadContenido}
-                  onChange={(e) => setActividadContenido(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-bg text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
-                  placeholder="Escribe los detalles de la actividad..."
-                />
-              </div>
+      <DeleteLeadModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onSuccess={handleDeleteSuccess}
+        lead={lead}
+      />
 
-              {/* Campos de fecha para Tareas y Reuniones */}
-              {tipoActividadConfig.requiereFecha && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                      Fecha/Hora inicio *
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={actividadFechaInicio}
-                      onChange={(e) => setActividadFechaInicio(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-bg text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                      Fecha/Hora fin *
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={actividadFechaFin}
-                      onChange={(e) => setActividadFechaFin(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-bg text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Asignar a usuarios */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Asignar a (opcional)
-                </label>
-                <div className="max-h-40 overflow-y-auto border border-neutral-300 dark:border-dark-border rounded-xl p-2 space-y-1">
-                  {usuarios.map(usuario => (
-                    <label
-                      key={usuario.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 dark:hover:bg-dark-hover cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={actividadParticipantes.includes(usuario.id)}
-                        onChange={() => toggleParticipante(usuario.id)}
-                        className="w-4 h-4 text-primary bg-white border-neutral-300 rounded focus:ring-primary/30"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
-                          {usuario.nombre}
-                        </p>
-                        <p className="text-xs text-neutral-500 truncate">{usuario.correo}</p>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                {actividadParticipantes.length > 0 && (
-                  <p className="text-xs text-neutral-500 mt-1">
-                    {actividadParticipantes.length} usuario(s) seleccionado(s)
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-neutral-200 dark:border-dark-border flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowActividadModal(false);
-                  resetActividadForm();
-                }}
-                className="px-4 py-2 text-neutral-600 dark:text-neutral-400 font-medium hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleGuardarActividad}
-                disabled={!actividadContenido.trim() || creandoActividad || (tipoActividadConfig.requiereFecha && (!actividadFechaInicio || !actividadFechaFin))}
-                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {creandoActividad && <CgSpinner className="animate-spin w-4 h-4" />}
-                {editandoActividadId ? 'Actualizar' : 'Guardar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de asignar lead */}
-      {showAsignarLeadModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b border-neutral-200 dark:border-dark-border">
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-                <FaUserPlus className="w-5 h-5 text-primary" />
-                Asignar Lead
-              </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                Selecciona los usuarios responsables de este lead
-              </p>
-            </div>
-
-            <div className="p-6">
-              <div className="max-h-64 overflow-y-auto border border-neutral-300 dark:border-dark-border rounded-xl p-2 space-y-1">
-                {usuarios.map(usuario => (
-                  <label
-                    key={usuario.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 dark:hover:bg-dark-hover cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedUsuariosLead.includes(usuario.id)}
-                      onChange={() => toggleUsuarioLead(usuario.id)}
-                      className="w-4 h-4 text-primary bg-white border-neutral-300 rounded focus:ring-primary/30"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
-                        {usuario.nombre}
-                      </p>
-                      <p className="text-xs text-neutral-500 truncate">{usuario.correo}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              {selectedUsuariosLead.length > 0 && (
-                <p className="text-xs text-neutral-500 mt-2">
-                  {selectedUsuariosLead.length} usuario(s) seleccionado(s)
-                </p>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-neutral-200 dark:border-dark-border flex gap-3 justify-end">
-              <button
-                onClick={() => setShowAsignarLeadModal(false)}
-                className="px-4 py-2 text-neutral-600 dark:text-neutral-400 font-medium hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAsignarLead}
-                disabled={selectedUsuariosLead.length === 0 || asignandoLead}
-                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {asignandoLead && <CgSpinner className="animate-spin w-4 h-4" />}
-                Asignar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmación de eliminar */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <FaTrash className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-              <h3 className="text-lg font-bold text-center text-neutral-900 dark:text-neutral-100 mb-2">
-                ¿Eliminar este lead?
-              </h3>
-              <p className="text-sm text-center text-neutral-500 dark:text-neutral-400">
-                Esta acción no se puede deshacer. El lead será marcado como inactivo.
-              </p>
-            </div>
-
-            <div className="p-6 border-t border-neutral-200 dark:border-dark-border flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 text-neutral-600 dark:text-neutral-400 font-medium hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleEliminarLead}
-                disabled={deleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-              >
-                {deleting && <CgSpinner className="animate-spin w-4 h-4" />}
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ActividadDetallesModal
+        isOpen={showActividadDetalles}
+        onClose={() => {
+          setShowActividadDetalles(false);
+          setActividadSeleccionada(null);
+        }}
+        actividad={actividadSeleccionada}
+        onEdit={handleEditarActividad}
+      />
     </div>
   );
 };

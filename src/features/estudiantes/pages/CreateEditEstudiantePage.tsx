@@ -45,10 +45,6 @@ export const CreateEditEstudiantePage: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Ref para mantener el valor más reciente de foto (evitar stale closure)
-  const fotoRef = useRef<File | null>(null);
-  const eliminarFotoRef = useRef(false);
-
   // Estado para la cámara
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);

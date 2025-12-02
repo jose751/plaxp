@@ -1,10 +1,24 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaChevronLeft, FaChevronRight, FaCalendarAlt, FaClipboard, FaUsers, FaFilter } from 'react-icons/fa';
-import { CgSpinner } from 'react-icons/cg';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  HiChevronLeft,
+  HiChevronRight,
+  HiCalendar,
+  HiClock,
+  HiUsers,
+  HiPhone,
+  HiMail,
+  HiChat,
+  HiVideoCamera,
+  HiClipboardList,
+  HiX,
+  HiViewGrid,
+  HiViewList,
+  HiOutlineCalendar,
+} from 'react-icons/hi';
 import { obtenerMisPendientesApi } from '../api/crmApi';
 import { listarUsuariosApi } from '../../users/api/UsersApi';
 import type { CrmActividad, TipoActividad } from '../types/crm.types';
+import { ActividadDetallesModal } from '../components/ActividadDetallesModal';
 
 interface Usuario {
   id: string;
@@ -21,38 +35,29 @@ interface ActividadConLead extends CrmActividad {
   };
 }
 
-// Obtener días del mes
-const getDaysInMonth = (year: number, month: number) => {
-  return new Date(year, month + 1, 0).getDate();
-};
+type VistaCalendario = 'mes' | 'semana' | 'dia' | 'agenda';
 
-// Obtener el primer día de la semana del mes (0 = Domingo)
-const getFirstDayOfMonth = (year: number, month: number) => {
-  return new Date(year, month, 1).getDay();
-};
+// Utilidades
+const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
-// Nombres de los meses
-const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
-// Nombres de los días
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DIAS_SEMANA_COMPLETOS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-// Colores por tipo de actividad
-const COLORES_TIPO: Record<TipoActividad, string> = {
-  NOTA: 'bg-amber-500',
-  LLAMADA: 'bg-green-500',
-  CORREO: 'bg-blue-500',
-  WHATSAPP: 'bg-emerald-500',
-  REUNION: 'bg-purple-500',
-  TAREA: 'bg-orange-500',
-  CAMBIO_ETAPA: 'bg-gray-500',
+// Colores por tipo de actividad - estilo moderno
+const TIPO_CONFIG: Record<TipoActividad, { bg: string; bgLight: string; text: string; icon: typeof HiPhone; label: string }> = {
+  NOTA: { bg: 'bg-amber-500', bgLight: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400', icon: HiClipboardList, label: 'Nota' },
+  LLAMADA: { bg: 'bg-emerald-500', bgLight: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400', icon: HiPhone, label: 'Llamada' },
+  CORREO: { bg: 'bg-blue-500', bgLight: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', icon: HiMail, label: 'Correo' },
+  WHATSAPP: { bg: 'bg-green-500', bgLight: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600 dark:text-green-400', icon: HiChat, label: 'WhatsApp' },
+  REUNION: { bg: 'bg-violet-500', bgLight: 'bg-violet-50 dark:bg-violet-900/20', text: 'text-violet-600 dark:text-violet-400', icon: HiVideoCamera, label: 'Reunión' },
+  TAREA: { bg: 'bg-orange-500', bgLight: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600 dark:text-orange-400', icon: HiClipboardList, label: 'Tarea' },
+  CAMBIO_ETAPA: { bg: 'bg-slate-500', bgLight: 'bg-slate-50 dark:bg-slate-900/20', text: 'text-slate-600 dark:text-slate-400', icon: HiViewGrid, label: 'Cambio' },
 };
 
 export const CalendarioPage = () => {
-  const navigate = useNavigate();
   const today = new Date();
 
   // Estados
@@ -60,13 +65,15 @@ export const CalendarioPage = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedUsuario, setSelectedUsuario] = useState<string>('todos');
-  const [showFilters, setShowFilters] = useState(false);
+  const [vista, setVista] = useState<VistaCalendario>('mes');
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [showActividadModal, setShowActividadModal] = useState(false);
+  const [actividadSeleccionada, setActividadSeleccionada] = useState<ActividadConLead | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDayOfMonth = getFirstDayOfMonth(year, month);
 
   // Cargar datos
   useEffect(() => {
@@ -99,317 +106,530 @@ export const CalendarioPage = () => {
     loadData();
   }, []);
 
-  // Filtrar actividades por usuario seleccionado
+  // Filtrar actividades
   const actividadesFiltradas = useMemo(() => {
     if (selectedUsuario === 'todos') return actividades;
-
-    return actividades.filter(a =>
-      a.participantes?.some(p => p.usuarioId === selectedUsuario)
-    );
+    return actividades.filter(a => a.participantes?.some(p => p.usuarioId === selectedUsuario));
   }, [actividades, selectedUsuario]);
 
   // Agrupar actividades por fecha
   const actividadesPorFecha = useMemo(() => {
     const map: Record<string, ActividadConLead[]> = {};
-
     actividadesFiltradas.forEach(actividad => {
-      // Usar fechaInicio para ubicar en el calendario
       const fecha = new Date(actividad.fechaInicio);
       const key = `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`;
-
       if (!map[key]) map[key] = [];
       map[key].push(actividad);
     });
-
     return map;
   }, [actividadesFiltradas]);
 
-  // Navegación de mes
-  const goToPrevMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
-
+  // Navegación
+  const goToPrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const goToNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const goToToday = () => {
     setCurrentDate(new Date());
+    setSelectedDate(new Date());
   };
 
-  // Generar días del calendario
-  const calendarDays = useMemo(() => {
+  // Mini calendario - generar días
+  const miniCalendarDays = useMemo(() => {
     const days = [];
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
 
-    // Días vacíos al inicio
-    for (let i = 0; i < firstDayOfMonth; i++) {
+    for (let i = 0; i < firstDay; i++) {
       days.push({ day: null, isCurrentMonth: false });
     }
 
-    // Días del mes
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+      const key = `${year}-${month}-${day}`;
+      const hasActividades = actividadesPorFecha[key]?.length > 0;
+      const isSelected = selectedDate && day === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear();
+
+      days.push({ day, isCurrentMonth: true, isToday, hasActividades, isSelected });
+    }
+
+    return days;
+  }, [year, month, actividadesPorFecha, today, selectedDate]);
+
+  // Calendario principal - generar días
+  const calendarDays = useMemo(() => {
+    const days = [];
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+
+    // Días del mes anterior
+    const prevMonthDays = getDaysInMonth(year, month - 1);
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: prevMonthDays - i, isCurrentMonth: false, actividades: [] });
+    }
+
+    // Días del mes actual
     for (let day = 1; day <= daysInMonth; day++) {
       const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
       const key = `${year}-${month}-${day}`;
       const dayActividades = actividadesPorFecha[key] || [];
+      const isSelected = selectedDate && day === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear();
 
-      days.push({
-        day,
-        isCurrentMonth: true,
-        isToday,
-        actividades: dayActividades
-      });
+      days.push({ day, isCurrentMonth: true, isToday, isSelected, actividades: dayActividades });
+    }
+
+    // Días del mes siguiente para completar la grilla
+    const remaining = 42 - days.length;
+    for (let day = 1; day <= remaining; day++) {
+      days.push({ day, isCurrentMonth: false, actividades: [] });
     }
 
     return days;
-  }, [year, month, daysInMonth, firstDayOfMonth, actividadesPorFecha, today]);
+  }, [year, month, actividadesPorFecha, today, selectedDate]);
+
+  // Actividades del día seleccionado
+  const actividadesDelDia = useMemo(() => {
+    if (!selectedDate) return [];
+    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`;
+    return actividadesPorFecha[key] || [];
+  }, [selectedDate, actividadesPorFecha]);
+
+  // Próximas actividades
+  const proximasActividades = useMemo(() => {
+    const ahora = new Date();
+    return actividadesFiltradas
+      .filter(a => new Date(a.fechaInicio) >= ahora)
+      .sort((a, b) => new Date(a.fechaInicio).getTime() - new Date(b.fechaInicio).getTime())
+      .slice(0, 5);
+  }, [actividadesFiltradas]);
 
   // Formatear hora
   const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateStr).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   };
+
+  // Abrir modal de actividad
+  const handleVerActividad = (actividad: ActividadConLead) => {
+    setActividadSeleccionada(actividad);
+    setShowActividadModal(true);
+  };
+
+  // Obtener nombre del lead para mostrar en el modal
+  const getLeadNombre = (actividad: ActividadConLead) => {
+    if (actividad.leadInfo) {
+      return `${actividad.leadInfo.contactoNombre} ${actividad.leadInfo.contactoApellido}`;
+    }
+    return 'Ver lead';
+  };
+
+  // Seleccionar día
+  const handleDayClick = useCallback((day: number, isCurrentMonth: boolean) => {
+    if (!isCurrentMonth) return;
+    setSelectedDate(new Date(year, month, day));
+  }, [year, month]);
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-96 space-y-3">
-        <CgSpinner className="animate-spin text-5xl text-primary" />
-        <p className="text-lg text-neutral-700 dark:text-neutral-300 font-semibold">Cargando calendario...</p>
+      <div className="flex flex-col justify-center items-center h-[calc(100vh-200px)] space-y-4">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-violet-200 dark:border-violet-900 rounded-full"></div>
+          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p className="text-neutral-600 dark:text-neutral-400 font-medium">Cargando calendario...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-140px)] flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-            Calendario de Tareas
-          </h1>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            Visualiza las tareas y reuniones programadas
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-              showFilters || selectedUsuario !== 'todos'
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-neutral-300 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:border-primary/50'
-            }`}
-          >
-            <FaFilter className="w-4 h-4" />
-            <span className="font-medium text-sm">Filtros</span>
-          </button>
-
-          <button
-            onClick={goToToday}
-            className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-xl hover:bg-primary/10 transition-colors"
-          >
-            Hoy
-          </button>
-        </div>
-      </div>
-
-      {/* Filtros */}
-      {showFilters && (
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-neutral-200 dark:border-dark-border p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <FaUsers className="w-4 h-4 text-neutral-400" />
-              <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Filtrar por usuario:
-              </label>
+      <div className="flex-shrink-0 mb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
+              <HiCalendar className="w-6 h-6 text-white" />
             </div>
+            <div>
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Calendario</h1>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                {MESES[month]} {year}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Selector de usuario */}
             <select
               value={selectedUsuario}
               onChange={(e) => setSelectedUsuario(e.target.value)}
-              className="px-4 py-2 rounded-xl border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-bg text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="px-3 py-2 rounded-xl border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card text-sm text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
             >
-              <option value="todos">Todos los usuarios</option>
-              {usuarios.map(usuario => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nombre}
-                </option>
+              <option value="todos">Todos</option>
+              {usuarios.map(u => (
+                <option key={u.id} value={u.id}>{u.nombre}</option>
               ))}
             </select>
 
-            {selectedUsuario !== 'todos' && (
-              <button
-                onClick={() => setSelectedUsuario('todos')}
-                className="text-sm text-primary hover:underline"
-              >
-                Limpiar filtro
-              </button>
-            )}
+            {/* Selector de vista */}
+            <div className="hidden md:flex items-center bg-neutral-100 dark:bg-dark-bg rounded-xl p-1">
+              {(['mes', 'semana', 'agenda'] as VistaCalendario[]).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setVista(v)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    vista === v
+                      ? 'bg-white dark:bg-dark-card text-violet-600 dark:text-violet-400 shadow-sm'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Botón Hoy */}
+            <button
+              onClick={goToToday}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
+            >
+              Hoy
+            </button>
+
+            {/* Toggle Sidebar */}
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="p-2 rounded-xl text-neutral-500 hover:text-neutral-700 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors lg:hidden"
+            >
+              <HiViewList className="w-5 h-5" />
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Calendario */}
-      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-neutral-200 dark:border-dark-border overflow-hidden">
-        {/* Navegación del calendario */}
-        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-dark-border">
-          <button
-            onClick={goToPrevMonth}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
-          >
-            <FaChevronLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-          </button>
+      {/* Main Content */}
+      <div className="flex-1 flex gap-4 min-h-0">
+        {/* Sidebar - Mini Calendario y Próximas Tareas */}
+        <div className={`${showSidebar ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-72 flex-shrink-0 gap-4`}>
+          {/* Mini Calendario */}
+          <div className="bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div className="p-4">
+              {/* Navegación Mini */}
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={goToPrevMonth}
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
+                >
+                  <HiChevronLeft className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                </button>
+                <span className="text-sm font-semibold text-neutral-900 dark:text-white">
+                  {MESES_CORTOS[month]} {year}
+                </span>
+                <button
+                  onClick={goToNextMonth}
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
+                >
+                  <HiChevronRight className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                </button>
+              </div>
 
-          <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-            {MESES[month]} {year}
-          </h2>
+              {/* Días de la semana */}
+              <div className="grid grid-cols-7 mb-2">
+                {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => (
+                  <div key={i} className="text-center text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 py-1">
+                    {d}
+                  </div>
+                ))}
+              </div>
 
-          <button
-            onClick={goToNextMonth}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
-          >
-            <FaChevronRight className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-          </button>
-        </div>
-
-        {/* Días de la semana */}
-        <div className="grid grid-cols-7 border-b border-neutral-200 dark:border-dark-border">
-          {DIAS_SEMANA.map(dia => (
-            <div
-              key={dia}
-              className="py-3 text-center text-sm font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-dark-bg"
-            >
-              {dia}
+              {/* Días */}
+              <div className="grid grid-cols-7 gap-0.5">
+                {miniCalendarDays.map((cell, index) => (
+                  <button
+                    key={index}
+                    onClick={() => cell.day && cell.isCurrentMonth && handleDayClick(cell.day, true)}
+                    disabled={!cell.isCurrentMonth}
+                    className={`
+                      relative aspect-square flex items-center justify-center text-xs font-medium rounded-lg transition-all
+                      ${!cell.isCurrentMonth ? 'text-neutral-300 dark:text-neutral-700' : ''}
+                      ${cell.isCurrentMonth && !cell.isToday && !cell.isSelected ? 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-hover' : ''}
+                      ${cell.isToday && !cell.isSelected ? 'text-violet-600 dark:text-violet-400 font-bold' : ''}
+                      ${cell.isSelected ? 'bg-violet-500 text-white shadow-md shadow-violet-500/30' : ''}
+                    `}
+                  >
+                    {cell.day}
+                    {cell.hasActividades && !cell.isSelected && (
+                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-violet-500"></span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          ))}
+          </div>
+
+          {/* Próximas Tareas */}
+          <div className="flex-1 bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden flex flex-col min-h-0">
+            <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
+              <h3 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                <HiClock className="w-4 h-4 text-violet-500" />
+                Próximas tareas
+              </h3>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2">
+              {proximasActividades.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-dark-bg flex items-center justify-center mb-3">
+                    <HiOutlineCalendar className="w-6 h-6 text-neutral-400" />
+                  </div>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">Sin tareas pendientes</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {proximasActividades.map((actividad) => {
+                    const config = TIPO_CONFIG[actividad.tipo];
+                    const Icon = config.icon;
+                    const fecha = new Date(actividad.fechaInicio);
+
+                    return (
+                      <button
+                        key={actividad.id}
+                        onClick={() => handleVerActividad(actividad)}
+                        className={`w-full p-3 rounded-xl ${config.bgLight} border border-transparent hover:border-neutral-200 dark:hover:border-dark-border transition-all text-left group`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`p-1.5 rounded-lg ${config.bg} flex-shrink-0`}>
+                            <Icon className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-neutral-900 dark:text-white truncate group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                              {actividad.contenido}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                              {fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · {formatTime(actividad.fechaInicio)}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Días del mes */}
-        <div className="grid grid-cols-7">
-          {calendarDays.map((cell, index) => (
-            <div
-              key={index}
-              className={`min-h-[100px] border-b border-r border-neutral-100 dark:border-dark-border p-1 ${
-                !cell.isCurrentMonth ? 'bg-neutral-50 dark:bg-dark-bg/50' : ''
-              } ${cell.isToday ? 'bg-primary/5' : ''}`}
-            >
-              {cell.day && (
-                <>
-                  <div className={`text-sm font-medium mb-1 p-1 ${
-                    cell.isToday
-                      ? 'w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center'
-                      : 'text-neutral-700 dark:text-neutral-300'
-                  }`}>
+        {/* Calendario Principal */}
+        <div className="flex-1 bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden flex flex-col min-h-0">
+          {/* Header del calendario */}
+          <div className="flex items-center justify-between p-4 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={goToPrevMonth}
+                className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
+              >
+                <HiChevronLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+              </button>
+              <button
+                onClick={goToNextMonth}
+                className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
+              >
+                <HiChevronRight className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+              </button>
+              <h2 className="text-lg font-bold text-neutral-900 dark:text-white ml-2">
+                {MESES[month]} {year}
+              </h2>
+            </div>
+
+            {/* Leyenda */}
+            <div className="hidden lg:flex items-center gap-4">
+              {['LLAMADA', 'REUNION', 'TAREA'].map((tipo) => {
+                const config = TIPO_CONFIG[tipo as TipoActividad];
+                return (
+                  <div key={tipo} className="flex items-center gap-1.5">
+                    <div className={`w-2.5 h-2.5 rounded-full ${config.bg}`}></div>
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400">{config.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Días de la semana */}
+          <div className="grid grid-cols-7 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
+            {DIAS_SEMANA.map((dia, index) => (
+              <div
+                key={dia}
+                className={`py-3 text-center text-xs font-semibold uppercase tracking-wider ${
+                  index === 0 || index === 6
+                    ? 'text-neutral-400 dark:text-neutral-600'
+                    : 'text-neutral-600 dark:text-neutral-400'
+                }`}
+              >
+                {dia}
+              </div>
+            ))}
+          </div>
+
+          {/* Grilla de días */}
+          <div className="flex-1 grid grid-cols-7 grid-rows-6 overflow-hidden">
+            {calendarDays.map((cell, index) => {
+              const isWeekend = index % 7 === 0 || index % 7 === 6;
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => cell.isCurrentMonth && handleDayClick(cell.day, true)}
+                  className={`
+                    relative border-b border-r border-neutral-100 dark:border-dark-border p-1.5 text-left transition-colors overflow-hidden
+                    ${!cell.isCurrentMonth ? 'bg-neutral-50/50 dark:bg-dark-bg/30' : ''}
+                    ${cell.isCurrentMonth && !cell.isSelected ? 'hover:bg-violet-50/50 dark:hover:bg-violet-900/10' : ''}
+                    ${cell.isSelected ? 'bg-violet-50 dark:bg-violet-900/20 ring-2 ring-inset ring-violet-500' : ''}
+                    ${isWeekend && cell.isCurrentMonth ? 'bg-neutral-50/30 dark:bg-dark-bg/20' : ''}
+                  `}
+                >
+                  {/* Número del día */}
+                  <div className={`
+                    inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium mb-1
+                    ${!cell.isCurrentMonth ? 'text-neutral-300 dark:text-neutral-700' : ''}
+                    ${cell.isCurrentMonth && !cell.isToday ? 'text-neutral-700 dark:text-neutral-300' : ''}
+                    ${cell.isToday ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md shadow-violet-500/30' : ''}
+                  `}>
                     {cell.day}
                   </div>
 
-                  {/* Actividades del día */}
-                  <div className="space-y-1 overflow-y-auto max-h-[60px]">
-                    {cell.actividades?.slice(0, 3).map((actividad) => (
-                      <button
-                        key={actividad.id}
-                        onClick={() => navigate(`/crm/leads/${actividad.leadId}`)}
-                        className={`w-full text-left px-1.5 py-0.5 rounded text-[10px] font-medium text-white truncate hover:opacity-80 transition-opacity ${COLORES_TIPO[actividad.tipo]}`}
-                        title={`${actividad.contenido} - ${formatTime(actividad.fechaInicio)}`}
-                      >
-                        {formatTime(actividad.fechaInicio)} {actividad.tipo === 'TAREA' ? '📋' : '📅'}
-                      </button>
-                    ))}
-                    {cell.actividades && cell.actividades.length > 3 && (
-                      <p className="text-[10px] text-neutral-500 px-1">
-                        +{cell.actividades.length - 3} más
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Lista de actividades pendientes */}
-      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg border border-neutral-200 dark:border-dark-border overflow-hidden">
-        <div className="p-4 border-b border-neutral-200 dark:border-dark-border">
-          <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-            <FaClipboard className="w-5 h-5 text-orange-500" />
-            Próximas Tareas y Reuniones
-          </h3>
-        </div>
-
-        <div className="divide-y divide-neutral-100 dark:divide-dark-border">
-          {actividadesFiltradas.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-neutral-100 dark:bg-dark-hover rounded-full flex items-center justify-center">
-                <FaCalendarAlt className="w-8 h-8 text-neutral-400" />
-              </div>
-              <p className="text-neutral-500 dark:text-neutral-400 font-medium">
-                No hay tareas pendientes
-              </p>
-            </div>
-          ) : (
-            actividadesFiltradas
-              .sort((a, b) => new Date(a.fechaInicio).getTime() - new Date(b.fechaInicio).getTime())
-              .slice(0, 10)
-              .map(actividad => {
-                const fechaInicio = new Date(actividad.fechaInicio);
-                const isPast = fechaInicio < new Date();
-
-                return (
-                  <button
-                    key={actividad.id}
-                    onClick={() => navigate(`/crm/leads/${actividad.leadId}`)}
-                    className="w-full flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors text-left"
-                  >
-                    {/* Indicador de tipo */}
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${COLORES_TIPO[actividad.tipo]}`} />
-
-                    {/* Contenido */}
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${isPast ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
-                        {actividad.contenido}
-                      </p>
-                      {actividad.leadInfo && (
-                        <p className="text-sm text-neutral-500 truncate">
-                          {actividad.leadInfo.contactoNombre} {actividad.leadInfo.contactoApellido} - {actividad.leadInfo.etapaNombre}
-                        </p>
+                  {/* Eventos del día */}
+                  {cell.actividades && cell.actividades.length > 0 && (
+                    <div className="space-y-0.5 overflow-hidden">
+                      {cell.actividades.slice(0, 2).map((actividad) => {
+                        const config = TIPO_CONFIG[actividad.tipo];
+                        return (
+                          <div
+                            key={actividad.id}
+                            className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${config.bgLight} ${config.text} truncate`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${config.bg} flex-shrink-0`}></span>
+                            <span className="truncate">{formatTime(actividad.fechaInicio)}</span>
+                          </div>
+                        );
+                      })}
+                      {cell.actividades.length > 2 && (
+                        <div className="text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1.5">
+                          +{cell.actividades.length - 2} más
+                        </div>
                       )}
                     </div>
-
-                    {/* Fecha */}
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-sm font-medium ${isPast ? 'text-red-600 dark:text-red-400' : 'text-neutral-700 dark:text-neutral-300'}`}>
-                        {fechaInicio.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                      </p>
-                      <p className="text-xs text-neutral-500">
-                        {formatTime(actividad.fechaInicio)}
-                      </p>
-                    </div>
-
-                    {/* Participantes */}
-                    {actividad.participantes && actividad.participantes.length > 0 && (
-                      <div className="flex -space-x-2">
-                        {actividad.participantes.slice(0, 3).map((p, idx) => (
-                          <div
-                            key={p.usuarioId}
-                            className="w-7 h-7 rounded-full bg-primary/20 border-2 border-white dark:border-dark-card flex items-center justify-center text-[10px] font-bold text-primary"
-                            title={p.usuarioNombre || `Usuario ${p.usuarioId}`}
-                          >
-                            {(p.usuarioNombre || 'U')[0].toUpperCase()}
-                          </div>
-                        ))}
-                        {actividad.participantes.length > 3 && (
-                          <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-dark-border border-2 border-white dark:border-dark-card flex items-center justify-center text-[10px] font-bold text-neutral-600">
-                            +{actividad.participantes.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                );
-              })
-          )}
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Panel de detalles del día */}
+        {selectedDate && (
+          <div className="hidden xl:flex flex-col w-80 flex-shrink-0 bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                    {DIAS_SEMANA_COMPLETOS[selectedDate.getDay()]}
+                  </p>
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-white">
+                    {selectedDate.getDate()} <span className="text-lg font-normal text-neutral-500">{MESES_CORTOS[selectedDate.getMonth()]}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
+                >
+                  <HiX className="w-4 h-4 text-neutral-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {actividadesDelDia.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 flex items-center justify-center mb-4">
+                    <HiCalendar className="w-8 h-8 text-violet-500" />
+                  </div>
+                  <p className="text-neutral-600 dark:text-neutral-400 font-medium mb-1">Sin eventos</p>
+                  <p className="text-sm text-neutral-400 dark:text-neutral-500">Este día está libre</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {actividadesDelDia
+                    .sort((a, b) => new Date(a.fechaInicio).getTime() - new Date(b.fechaInicio).getTime())
+                    .map((actividad) => {
+                      const config = TIPO_CONFIG[actividad.tipo];
+                      const Icon = config.icon;
+
+                      return (
+                        <button
+                          key={actividad.id}
+                          onClick={() => handleVerActividad(actividad)}
+                          className="w-full p-4 rounded-xl border border-neutral-200 dark:border-dark-border hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md transition-all text-left group"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-xl ${config.bg} flex-shrink-0 shadow-md`}>
+                              <Icon className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-neutral-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                                {config.label}
+                              </p>
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-2">
+                                {actividad.contenido}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <HiClock className="w-3.5 h-3.5 text-neutral-400" />
+                                <span className="text-xs text-neutral-500">
+                                  {formatTime(actividad.fechaInicio)}
+                                  {actividad.fechaFin && ` - ${formatTime(actividad.fechaFin)}`}
+                                </span>
+                              </div>
+                              {actividad.participantes && actividad.participantes.length > 0 && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  <HiUsers className="w-3.5 h-3.5 text-neutral-400" />
+                                  <div className="flex -space-x-1.5">
+                                    {actividad.participantes.slice(0, 3).map((p) => (
+                                      <div
+                                        key={p.usuarioId}
+                                        className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 border-2 border-white dark:border-dark-card flex items-center justify-center text-[8px] font-bold text-white"
+                                        title={p.usuarioNombre}
+                                      >
+                                        {(p.usuarioNombre || 'U')[0]}
+                                      </div>
+                                    ))}
+                                    {actividad.participantes.length > 3 && (
+                                      <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-dark-border border-2 border-white dark:border-dark-card flex items-center justify-center text-[8px] font-bold text-neutral-600">
+                                        +{actividad.participantes.length - 3}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Modal de detalles de actividad */}
+      <ActividadDetallesModal
+        isOpen={showActividadModal}
+        onClose={() => {
+          setShowActividadModal(false);
+          setActividadSeleccionada(null);
+        }}
+        actividad={actividadSeleccionada}
+        showLeadLink={true}
+        leadNombre={actividadSeleccionada ? getLeadNombre(actividadSeleccionada) : undefined}
+      />
     </div>
   );
 };

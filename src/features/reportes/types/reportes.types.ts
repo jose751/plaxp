@@ -34,7 +34,7 @@ export interface MesData {
 export interface RecaudacionMensualData {
   mesActual: MesData;
   mesesAnteriores: MesData[];
-  variacionPorcentual: number;
+  variacionPorcentual: number | null;
 }
 
 export interface RecaudacionMensualResponse {

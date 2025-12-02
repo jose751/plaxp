@@ -94,7 +94,7 @@ export const exportRecaudacionMensualToExcel = (data: RecaudacionMensualData): v
     ['Total Recaudado:', formatCurrency(data.mesActual.totalRecaudado)],
     ['Cantidad de Transacciones:', data.mesActual.cantidadTransacciones],
     [],
-    ['Variación vs mes anterior:', `${data.variacionPorcentual >= 0 ? '+' : ''}${data.variacionPorcentual.toFixed(1)}%`],
+    ['Variación vs mes anterior:', `${(data.variacionPorcentual ?? 0) >= 0 ? '+' : ''}${(data.variacionPorcentual ?? 0).toFixed(1)}%`],
     [],
     [],
     ['COMPARATIVO DE MESES ANTERIORES'],
