@@ -27,6 +27,13 @@ export interface StatusOption {
     color?: string;     // Color opcional para el badge (ej: "green", "red")
 }
 
+export interface CustomAction<T> {
+    icon: React.ReactNode;
+    label: string;
+    onClick: (item: T) => void;
+    className?: string;
+}
+
 interface PaginatedDataTableProps<T extends BaseItem> {
     fetchDataFunction: (page: number, limit: number, query: string, status?: string, additionalFilters?: Record<string, any>) => Promise<PaginatedResponse<T>>;
     onRowClick: (item: T) => void;
@@ -42,18 +49,20 @@ interface PaginatedDataTableProps<T extends BaseItem> {
     onExportExcel?: () => void;  // Opcional: callback para exportar a Excel
     onExportPdf?: () => void;  // Opcional: callback para exportar a PDF
     onImport?: () => void;  // Opcional: callback para importar datos
+    customActions?: CustomAction<T>[];  // Opcional: acciones personalizadas
 }
 
 const DEFAULT_PAGE_SIZE = 15;
 const PAGE_SIZE_OPTIONS = [10, 15, 25, 50, 100];
 
 // --- Subcomponente para la vista de TARJETAS (Móvil) ---
-const PaginatedCardList = <T extends BaseItem>({ data, columns, onRowClick, onEdit, onView }: {
+const PaginatedCardList = <T extends BaseItem>({ data, columns, onRowClick, onEdit, onView, customActions }: {
     data: T[];
     columns: ColumnDefinition<T>[];
     onRowClick: (item: T) => void;
     onEdit?: (item: T) => void;
     onView?: (item: T) => void;
+    customActions?: CustomAction<T>[];
 }) => (
     <div className="space-y-4">
         {data.map((item) => {
@@ -88,6 +97,17 @@ const PaginatedCardList = <T extends BaseItem>({ data, columns, onRowClick, onEd
                                         <FaEye size={16} />
                                     </button>
                                 )}
+                                {customActions && customActions.map((action, index) => (
+                                    <button
+                                        key={index}
+                                        className={`p-2.5 rounded-lg transition-colors ${action.className || 'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30'}`}
+                                        aria-label={action.label}
+                                        title={action.label}
+                                        onClick={(e) => { e.stopPropagation(); action.onClick(item); }}
+                                    >
+                                        {action.icon}
+                                    </button>
+                                ))}
                                 {onEdit && (
                                     <button
                                         className="p-2.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
@@ -123,7 +143,7 @@ const PaginatedCardList = <T extends BaseItem>({ data, columns, onRowClick, onEd
 );
 
 // --- Subcomponente para la vista de TABLA (Desktop) ---
-const PaginatedTable = <T extends BaseItem>({ data, columns, onRowClick, onEdit, onView, onSort, sortColumn, sortDirection }: {
+const PaginatedTable = <T extends BaseItem>({ data, columns, onRowClick, onEdit, onView, onSort, sortColumn, sortDirection, customActions }: {
     data: T[];
     columns: ColumnDefinition<T>[];
     onRowClick: (item: T) => void;
@@ -132,6 +152,7 @@ const PaginatedTable = <T extends BaseItem>({ data, columns, onRowClick, onEdit,
     onSort: (column: keyof T) => void;
     sortColumn: keyof T | null;
     sortDirection: 'asc' | 'desc';
+    customActions?: CustomAction<T>[];
 }) => (
     <div className="overflow-hidden">
         {/* Contenedor con scroll interno */}
@@ -216,6 +237,20 @@ const PaginatedTable = <T extends BaseItem>({ data, columns, onRowClick, onEdit,
                                             <FaEye size={16} />
                                         </button>
                                     )}
+                                    {customActions && customActions.map((action, index) => (
+                                        <button
+                                            key={index}
+                                            className={`transition-all duration-200 p-1.5 rounded-lg shadow hover:shadow-md ${action.className || 'text-green-600 hover:text-white hover:bg-green-600'}`}
+                                            aria-label={action.label}
+                                            title={action.label}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                action.onClick(item);
+                                            }}
+                                        >
+                                            {action.icon}
+                                        </button>
+                                    ))}
                                     {onEdit && (
                                         <button
                                             className="text-info hover:text-white transition-all duration-200 p-1.5 hover:bg-info rounded-lg shadow hover:shadow-md"
@@ -255,6 +290,7 @@ const PaginatedDataTable = <T extends BaseItem>({
     onExportExcel,
     onExportPdf,
     onImport,
+    customActions,
 }: PaginatedDataTableProps<T>) => {
     // Estado de la Data y UI
     const [data, setData] = useState<T[]>([]);
@@ -629,6 +665,7 @@ const PaginatedDataTable = <T extends BaseItem>({
                                         onSort={handleSort}
                                         sortColumn={sortColumn}
                                         sortDirection={sortDirection}
+                                        customActions={customActions}
                                     />
                                 </div>
                                 {/* Mobile */}
@@ -639,6 +676,7 @@ const PaginatedDataTable = <T extends BaseItem>({
                                         onRowClick={handleRowClickEvent}
                                         onEdit={onEdit ? handleEditEvent : undefined}
                                         onView={onView ? handleViewEvent : undefined}
+                                        customActions={customActions}
                                     />
                                 </div>
                             </>

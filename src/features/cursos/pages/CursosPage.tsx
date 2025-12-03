@@ -1,11 +1,12 @@
 import { useState, useEffect, type JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaUsers } from 'react-icons/fa';
 import PaginatedDataTable, {
   type PaginatedResponse,
   type ColumnDefinition,
   type BaseItem,
-  type StatusOption
+  type StatusOption,
+  type CustomAction
 } from '../../../shared/components/PaginatedDataTable';
 import { listarCursosApi } from '../api/cursosApi';
 import { listarCategoriasApi } from '../../categorias/api/categoriasApi';
@@ -129,6 +130,7 @@ export const CursosPage = () => {
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const [loadingSucursales, setLoadingSucursales] = useState(false);
 
+
   // Cargar categorías y sucursales al montar el componente
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -181,6 +183,20 @@ export const CursosPage = () => {
   const handleEdit = (curso: CursoItem) => {
     navigate(`/cursos/edit/${curso.id}`);
   };
+
+  const handleVerGrupo = (curso: CursoItem) => {
+    navigate(`/cursos/grupo/${curso.id}`);
+  };
+
+  // Acciones personalizadas para la tabla
+  const customActions: CustomAction<CursoItem>[] = [
+    {
+      icon: <FaUsers size={16} />,
+      label: 'Ver grupo',
+      onClick: handleVerGrupo,
+      className: 'text-teal-600 hover:text-white hover:bg-teal-600',
+    },
+  ];
 
   // Renderizar filtros adicionales (categoría y sucursal)
   const renderAdditionalFilters = (filters: Record<string, any>, setFilters: (filters: Record<string, any>) => void) => {
@@ -250,6 +266,7 @@ export const CursosPage = () => {
       statusOptions={statusOptions}
       renderAdditionalFilters={renderAdditionalFilters}
       additionalFilters={{ categoriaId: '', idSucursal: '' }}
+      customActions={customActions}
     />
   );
 };

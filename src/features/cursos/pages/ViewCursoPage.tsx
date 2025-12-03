@@ -12,6 +12,7 @@ import {
   FaHashtag,
   FaCalendarAlt,
   FaBuilding,
+  FaUsers,
 } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerCursoPorIdApi } from '../api/cursosApi';
@@ -160,15 +161,24 @@ export const ViewCursoPage: React.FC = () => {
               <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 mt-1">Información completa del curso</p>
             </div>
           </div>
-          {hasPermission('cursos.editar') && (
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
             <button
-              onClick={() => navigate(`/cursos/edit/${curso.id}`)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-br from-violet-500 to-violet-600 shadow-md shadow-violet-500/30 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto"
+              onClick={() => navigate(`/cursos/grupo/${curso.id}`)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/30 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto"
             >
-              <FaEdit className="w-4 h-4" />
-              Editar
+              <FaUsers className="w-4 h-4" />
+              Ver Grupo
             </button>
-          )}
+            {hasPermission('cursos.editar') && (
+              <button
+                onClick={() => navigate(`/cursos/edit/${curso.id}`)}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-br from-violet-500 to-violet-600 shadow-md shadow-violet-500/30 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all w-full md:w-auto"
+              >
+                <FaEdit className="w-4 h-4" />
+                Editar
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

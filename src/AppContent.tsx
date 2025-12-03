@@ -4,7 +4,7 @@ import { DashboardPage } from './features/dashboard';
 import { UsersPage, CreateEditUserPage, ViewUserPage } from './features/users';
 import { RolesPage, CreateEditRolPage, ViewRolPage } from './features/roles';
 import { EstudiantesPage, ViewEstudiantePage, CreateEditEstudiantePage, ImportEstudiantesPage } from './features/estudiantes';
-import { CursosPage, CreateEditCursoPage, ViewCursoPage } from './features/cursos';
+import { CursosPage, CreateEditCursoPage, ViewCursoPage, VerGrupoCursoPage } from './features/cursos';
 import { CategoriasPage, CreateEditCategoriaPage, ViewCategoriaPage } from './features/categorias';
 import { ProfesoresPage, CreateEditProfesorPage, ViewProfesorPage } from './features/profesores';
 import { SucursalesPage, CreateEditSucursalPage, ViewSucursalPage } from './features/sucursales';
@@ -191,6 +191,14 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <ViewCursoPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/cursos/grupo/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <VerGrupoCursoPage />
           </MainLayout>
         </ProtectedRoute>
       } />

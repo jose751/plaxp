@@ -16,7 +16,9 @@
       "Bash(npm create:*)",
       "WebFetch(domain:github.com)",
       "Bash(copy \"C:\\Users\\XPC\\Desktop\\desarrollo\\plaxp\\public\\icono.png\" \"C:\\Users\\XPC\\Desktop\\desarrollo\\admin-panel-new\\public\\images\\logo\\icono.png\")",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(xargs:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
