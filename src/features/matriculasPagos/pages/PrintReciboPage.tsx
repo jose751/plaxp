@@ -39,16 +39,6 @@ const formatMonto = (monto: number): string => {
   return `$${monto.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const formatDateTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
 
 const formatDateShort = (dateString: string): string => {
   const date = new Date(dateString);
