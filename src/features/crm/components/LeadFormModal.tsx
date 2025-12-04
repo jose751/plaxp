@@ -212,7 +212,7 @@ export const LeadFormModal = ({
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { value: RelacionContacto.PROPIO, label: 'Estudiante' },
+                  { value: RelacionContacto.PROPIO, label: 'Propio' },
                   { value: RelacionContacto.PADRE, label: 'Padre' },
                   { value: RelacionContacto.MADRE, label: 'Madre' },
                   { value: RelacionContacto.OTRO, label: 'Otro' },
