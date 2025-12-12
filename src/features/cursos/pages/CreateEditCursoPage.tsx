@@ -12,6 +12,9 @@ import type { CrearCursoData } from '../types/curso.types';
 import type { Categoria } from '../../categorias/types/categoria.types';
 import { LoadingOverlay } from '../../../shared/components/LoadingOverlay';
 import { SucursalSelect } from '../../sucursales';
+import { HorariosFormSection, type HorarioLocal } from '../../horarios/components/HorariosFormSection';
+import { HorariosCursoManager } from '../../horarios/components/HorariosCursoManager';
+import { crearHorarioApi } from '../../horarios/api/horariosApi';
 
 export const CreateEditCursoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -36,6 +39,7 @@ export const CreateEditCursoPage: React.FC = () => {
     enableCompletion: false,
     estado: true,
     idSucursal: '',
+    capacidadMaxima: undefined,
   });
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -50,6 +54,9 @@ export const CreateEditCursoPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [loadingMessage, setLoadingMessage] = useState<string>('Guardando datos...');
+
+  // Estado para horarios (solo en modo creación)
+  const [horariosLocales, setHorariosLocales] = useState<HorarioLocal[]>([]);
 
   // Cargar curso si es modo edición
   useEffect(() => {
@@ -81,6 +88,7 @@ export const CreateEditCursoPage: React.FC = () => {
         enableCompletion: curso.enableCompletion,
         estado: curso.estado,
         idSucursal: curso.idSucursal || '',
+        capacidadMaxima: curso.capacidadMaxima,
       });
     } catch (error) {
       console.error('Error al cargar curso:', error);
@@ -303,6 +311,7 @@ export const CreateEditCursoPage: React.FC = () => {
         descripcion: formData.descripcion?.trim() || undefined,
         enableCompletion: formData.enableCompletion,
         idSucursal: formData.idSucursal,
+        capacidadMaxima: formData.capacidadMaxima || undefined,
       };
 
       // Solo incluir fechas si tienen valores
@@ -362,7 +371,32 @@ export const CreateEditCursoPage: React.FC = () => {
       }
 
       if (response.success) {
-        setUploadStatus('¡Curso creado exitosamente!');
+        // Si es creación y hay horarios, crearlos
+        if (!isEditMode && horariosLocales.length > 0 && response.data?.id) {
+          setLoadingMessage('Creando horarios...');
+          setUploadStatus('Creando horarios del curso...');
+
+          const cursoId = response.data.id;
+
+          // Crear cada horario
+          for (const horario of horariosLocales) {
+            try {
+              await crearHorarioApi({
+                cursoId,
+                diaSemana: horario.diaSemana,
+                horaInicio: horario.horaInicio,
+                duracionMinutos: horario.duracionMinutos,
+                modalidad: horario.modalidad,
+                aulaId: horario.aulaId,
+              });
+            } catch (err) {
+              console.error('Error al crear horario:', err);
+              // Continuamos con los demás horarios aunque uno falle
+            }
+          }
+        }
+
+        setUploadStatus(isEditMode ? '¡Curso actualizado!' : '¡Curso creado exitosamente!');
         setShowSuccess(true);
 
         // Esperar 2 segundos antes de redirigir para mostrar el estado de éxito
@@ -520,6 +554,29 @@ export const CreateEditCursoPage: React.FC = () => {
                 label="Sucursal"
                 placeholder="Seleccionar sucursal"
               />
+            </div>
+
+            {/* Capacidad Máxima */}
+            <div>
+              <label htmlFor="capacidadMaxima" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                Capacidad Máxima
+              </label>
+              <input
+                type="number"
+                id="capacidadMaxima"
+                name="capacidadMaxima"
+                value={formData.capacidadMaxima || ''}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                  setFormData(prev => ({ ...prev, capacidadMaxima: value }));
+                }}
+                disabled={loading}
+                min={1}
+                max={999}
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg text-sm bg-white dark:bg-dark-bg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-100 dark:focus:ring-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600 disabled:bg-neutral-50 dark:disabled:bg-neutral-700/50 disabled:cursor-not-allowed"
+                placeholder="Ej: 30"
+              />
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Número máximo de estudiantes (opcional)</p>
             </div>
 
             {/* Código del Curso */}
@@ -891,6 +948,22 @@ export const CreateEditCursoPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Horarios del Curso */}
+        {isEditMode && id ? (
+          <HorariosCursoManager
+            cursoId={id}
+            sucursalId={formData.idSucursal}
+            disabled={loading}
+          />
+        ) : (
+          <HorariosFormSection
+            horarios={horariosLocales}
+            onChange={setHorariosLocales}
+            sucursalId={formData.idSucursal}
+            disabled={loading}
+          />
+        )}
 
         {/* Footer con botones */}
         <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-4 border-t border-neutral-200 dark:border-dark-border">

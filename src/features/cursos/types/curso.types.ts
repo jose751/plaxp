@@ -18,6 +18,7 @@ export interface Curso {
   estado: boolean;
   sincronizadoMoodle: boolean;
   idSucursal?: string; // Sucursal principal (único campo de sucursal para cursos)
+  capacidadMaxima?: number; // Capacidad máxima de estudiantes
   creadoEn: string;
   modificadoEn: string;
 }
@@ -48,6 +49,7 @@ export interface CrearCursoData {
   fechaFin?: string;
   enableCompletion: boolean;
   idSucursal: string; // Sucursal principal (obligatorio)
+  capacidadMaxima?: number; // Capacidad máxima de estudiantes (opcional)
 }
 
 /**
@@ -65,6 +67,7 @@ export interface ActualizarCursoData {
   enableCompletion?: boolean;
   estado?: boolean;
   idSucursal?: string; // Sucursal principal
+  capacidadMaxima?: number; // Capacidad máxima de estudiantes
 }
 
 /**

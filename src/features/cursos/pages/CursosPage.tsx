@@ -23,6 +23,7 @@ interface CursoItem extends BaseItem {
   nombre: string;
   nombreCorto: string;
   categoria: string;
+  capacidad: JSX.Element;
   estado: JSX.Element;
   sincronizado: JSX.Element;
   categoriaNombre?: string;
@@ -34,6 +35,7 @@ const columns: ColumnDefinition<CursoItem>[] = [
   { key: 'nombre', header: 'Nombre del Curso' },
   { key: 'nombreCorto', header: 'Nombre Corto' },
   { key: 'categoriaNombre', header: 'Categoría' },
+  { key: 'capacidad', header: 'Capacidad' },
   { key: 'estado', header: 'Estado' },
   { key: 'sincronizado', header: 'Sincronizado Moodle' },
 ];
@@ -96,12 +98,24 @@ const fetchCursos = async (
         </span>
       );
 
+      const capacidadBadge = curso.capacidadMaxima ? (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/30 dark:to-purple-800/20 text-purple-700 dark:text-purple-400 border border-purple-300 dark:border-purple-700 shadow-sm">
+          <FaUsers className="w-3 h-3" />
+          {curso.capacidadMaxima}
+        </span>
+      ) : (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-900/30 dark:to-gray-800/20 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-700 shadow-sm">
+          Sin límite
+        </span>
+      );
+
       return {
         id: curso.id,
         codigo: curso.codigo,
         nombre: curso.nombre,
         nombreCorto: curso.nombreCorto,
         categoria: 'N/A',
+        capacidad: capacidadBadge,
         estado: estadoBadge,
         sincronizado: sincronizadoBadge,
         categoriaNombre: curso.categoriaNombre,

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../features/security/hooks/useAuth';
 import { ThemeToggle } from '../components';
-import { FaChalkboardTeacher, FaSyncAlt, FaCreditCard, FaReceipt, FaUser, FaSignOutAlt, FaCamera, FaClipboardList, FaColumns } from 'react-icons/fa';
+import { FaChalkboardTeacher, FaSyncAlt, FaCreditCard, FaReceipt, FaUser, FaSignOutAlt, FaCamera, FaClipboardList, FaColumns, FaDoorOpen, FaClock } from 'react-icons/fa';
 import { HiX, HiChevronDown } from 'react-icons/hi';
 import { CgSpinner } from 'react-icons/cg';
 import { UserAvatar } from '../../features/users/components/UserAvatar';
@@ -328,86 +328,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </span>
             </Link>
 
-            {/* Separador - Administración (solo si tiene permisos de usuarios o roles) */}
-            {(hasPermission('usuarios.ver') || hasPermission('roles.ver')) && (
-              <>
-                <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
-                    <p className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-                      Administración
-                    </p>
-                </div>
-                {isCollapsed && <div className="h-4"></div>}
-              </>
-            )}
-
-            {/* Usuarios */}
-            {hasPermission('usuarios.ver') && (
-              <Link
-                to="/usuarios"
-                onClick={() => setMobileSidebarOpen(false)}
-                className={`
-                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
-                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
-                  ${location.pathname === '/usuarios'
-                    ? 'bg-gradient-to-r from-purple-500/15 to-purple-500/5 text-purple-600 shadow-sm'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
-                  }
-                `}
-              >
-                {location.pathname === '/usuarios' && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-purple-500 to-purple-600 rounded-r-full"></div>
-                )}
-                <div className={`
-                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
-                  ${location.pathname === '/usuarios'
-                    ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/30'
-                    : 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/20 group-hover:shadow-purple-500/30'
-                  }
-                `}>
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
-                  Usuarios
-                </span>
-              </Link>
-            )}
-
-            {/* Roles */}
-            {hasPermission('roles.ver') && (
-              <Link
-                to="/roles"
-                onClick={() => setMobileSidebarOpen(false)}
-                className={`
-                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
-                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
-                  ${location.pathname === '/roles'
-                    ? 'bg-gradient-to-r from-teal-500/15 to-teal-500/5 text-teal-600 shadow-sm'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
-                  }
-                `}
-              >
-                {location.pathname === '/roles' && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-teal-500 to-teal-600 rounded-r-full"></div>
-                )}
-                <div className={`
-                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
-                  ${location.pathname === '/roles'
-                    ? 'bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/30'
-                    : 'bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/20 group-hover:shadow-teal-500/30'
-                  }
-                `}>
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
-                  Roles
-                </span>
-              </Link>
-            )}
-
             {/* Separador - Académico (solo si tiene permisos) */}
             {(hasPermission('estudiantes.ver') || hasPermission('profesores.ver') || hasPermission('cursos.ver') || hasPermission('categorias.ver')) && (
               <>
@@ -556,51 +476,65 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </Link>
             )}
 
-            {/* Separador - Corporativo (solo si tiene permiso de sucursales) */}
-            {hasPermission('sucursales.ver') && (
-              <>
-                <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
-                    <p className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-                      Corporativo
-                    </p>
-                </div>
-                {isCollapsed && <div className="h-4"></div>}
-              </>
-            )}
+            {/* Aulas */}
+            <Link
+              to="/aulas"
+              onClick={() => setMobileSidebarOpen(false)}
+              className={`
+                group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                ${location.pathname.startsWith('/aulas')
+                  ? 'bg-gradient-to-r from-lime-500/15 to-lime-500/5 text-lime-600 shadow-sm'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                }
+              `}
+            >
+              {location.pathname.startsWith('/aulas') && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-lime-500 to-lime-600 rounded-r-full"></div>
+              )}
+              <div className={`
+                relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                ${location.pathname.startsWith('/aulas')
+                  ? 'bg-gradient-to-br from-lime-500 to-lime-600 shadow-md shadow-lime-500/30'
+                  : 'bg-gradient-to-br from-lime-500 to-lime-600 shadow-md shadow-lime-500/20 group-hover:shadow-lime-500/30'
+                }
+              `}>
+                <FaDoorOpen className="w-4 h-4 text-white" />
+              </div>
+              <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                Aulas
+              </span>
+            </Link>
 
-            {/* Sucursales */}
-            {hasPermission('sucursales.ver') && (
-              <Link
-                to="/sucursales"
-                onClick={() => setMobileSidebarOpen(false)}
-                className={`
-                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
-                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
-                  ${location.pathname.startsWith('/sucursales')
-                    ? 'bg-gradient-to-r from-sky-500/15 to-sky-500/5 text-sky-600 shadow-sm'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
-                  }
-                `}
-              >
-                {location.pathname.startsWith('/sucursales') && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-sky-500 to-sky-600 rounded-r-full"></div>
-                )}
-                <div className={`
-                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
-                  ${location.pathname.startsWith('/sucursales')
-                    ? 'bg-gradient-to-br from-sky-500 to-sky-600 shadow-md shadow-sky-500/30'
-                    : 'bg-gradient-to-br from-sky-500 to-sky-600 shadow-md shadow-sky-500/20 group-hover:shadow-sky-500/30'
-                  }
-                `}>
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
-                  Sucursales
-                </span>
-              </Link>
-            )}
+            {/* Horarios */}
+            <Link
+              to="/horarios"
+              onClick={() => setMobileSidebarOpen(false)}
+              className={`
+                group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                ${location.pathname.startsWith('/horarios')
+                  ? 'bg-gradient-to-r from-orange-500/15 to-orange-500/5 text-orange-600 shadow-sm'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                }
+              `}
+            >
+              {location.pathname.startsWith('/horarios') && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-orange-500 to-orange-600 rounded-r-full"></div>
+              )}
+              <div className={`
+                relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                ${location.pathname.startsWith('/horarios')
+                  ? 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-md shadow-orange-500/30'
+                  : 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-md shadow-orange-500/20 group-hover:shadow-orange-500/30'
+                }
+              `}>
+                <FaClock className="w-4 h-4 text-white" />
+              </div>
+              <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                Horarios
+              </span>
+            </Link>
 
             {/* Separador - CRM */}
             {hasPermission('crm.ver') && (
@@ -851,6 +785,120 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 Pagos
               </span>
             </Link>
+
+            {/* Separador - Administración (solo si tiene permisos de usuarios o roles) */}
+            {(hasPermission('usuarios.ver') || hasPermission('roles.ver')) && (
+              <>
+                <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>
+                    <p className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+                      Administración
+                    </p>
+                </div>
+                {isCollapsed && <div className="h-4"></div>}
+              </>
+            )}
+
+            {/* Usuarios */}
+            {hasPermission('usuarios.ver') && (
+              <Link
+                to="/usuarios"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname === '/usuarios'
+                    ? 'bg-gradient-to-r from-purple-500/15 to-purple-500/5 text-purple-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname === '/usuarios' && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-purple-500 to-purple-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname === '/usuarios'
+                    ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/30'
+                    : 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-md shadow-purple-500/20 group-hover:shadow-purple-500/30'
+                  }
+                `}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Usuarios
+                </span>
+              </Link>
+            )}
+
+            {/* Roles */}
+            {hasPermission('roles.ver') && (
+              <Link
+                to="/roles"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname === '/roles'
+                    ? 'bg-gradient-to-r from-teal-500/15 to-teal-500/5 text-teal-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname === '/roles' && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-teal-500 to-teal-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname === '/roles'
+                    ? 'bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/30'
+                    : 'bg-gradient-to-br from-teal-500 to-teal-600 shadow-md shadow-teal-500/20 group-hover:shadow-teal-500/30'
+                  }
+                `}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Roles
+                </span>
+              </Link>
+            )}
+
+            {/* Sucursales */}
+            {hasPermission('sucursales.ver') && (
+              <Link
+                to="/sucursales"
+                onClick={() => setMobileSidebarOpen(false)}
+                className={`
+                  group flex items-center gap-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden whitespace-nowrap
+                  ${isCollapsed ? 'justify-center px-0' : 'px-3'}
+                  ${location.pathname.startsWith('/sucursales')
+                    ? 'bg-gradient-to-r from-sky-500/15 to-sky-500/5 text-sky-600 shadow-sm'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-dark-hover'
+                  }
+                `}
+              >
+                {location.pathname.startsWith('/sucursales') && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-sky-500 to-sky-600 rounded-r-full"></div>
+                )}
+                <div className={`
+                  relative z-10 p-1.5 rounded-md transition-all duration-200 flex-shrink-0
+                  ${location.pathname.startsWith('/sucursales')
+                    ? 'bg-gradient-to-br from-sky-500 to-sky-600 shadow-md shadow-sky-500/30'
+                    : 'bg-gradient-to-br from-sky-500 to-sky-600 shadow-md shadow-sky-500/20 group-hover:shadow-sky-500/30'
+                  }
+                `}>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <span className={`relative z-10 font-medium text-sm transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+                  Sucursales
+                </span>
+              </Link>
+            )}
 
             {/* Separador - Sistema */}
             <div className={`mt-4 mb-1 px-3 transition-opacity duration-200 ${isCollapsed ? 'opacity-0 hidden' : 'opacity-100'}`}>

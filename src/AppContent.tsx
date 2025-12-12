@@ -8,6 +8,8 @@ import { CursosPage, CreateEditCursoPage, ViewCursoPage, VerGrupoCursoPage } fro
 import { CategoriasPage, CreateEditCategoriaPage, ViewCategoriaPage } from './features/categorias';
 import { ProfesoresPage, CreateEditProfesorPage, ViewProfesorPage } from './features/profesores';
 import { SucursalesPage, CreateEditSucursalPage, ViewSucursalPage } from './features/sucursales';
+import { AulasPage, ViewAulaPage } from './features/aulas';
+import { HorariosPage, HorariosCalendarioPage, CreateEditHorarioPage, ViewHorarioPage } from './features/horarios';
 import { PeriodosLectivosPage, CreateEditPeriodoLectivoPage, ViewPeriodoLectivoPage } from './features/periodosLectivos';
 import { PlanesPagoPage, CreateEditPlanPagoPage, ViewPlanPagoPage } from './features/planesPago';
 import { MatriculasPagosPage, ViewMatriculaPagoPage, PrintReciboPage } from './features/matriculasPagos';
@@ -297,6 +299,64 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <ViewSucursalPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Rutas de Aulas */}
+      <Route path="/aulas" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <AulasPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/aulas/view/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ViewAulaPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Rutas de Horarios */}
+      <Route path="/horarios" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <HorariosPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/horarios/calendario" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <HorariosCalendarioPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/horarios/create" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditHorarioPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/horarios/edit/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CreateEditHorarioPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/horarios/view/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ViewHorarioPage />
           </MainLayout>
         </ProtectedRoute>
       } />

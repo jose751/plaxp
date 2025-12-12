@@ -260,6 +260,18 @@ export const ViewCursoPage: React.FC = () => {
 
             <div className="pb-3 md:pb-0 border-b md:border-b-0 border-neutral-200 dark:border-dark-border">
               <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide block mb-2">
+                Capacidad Máxima
+              </label>
+              <div className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
+                <FaUsers className="w-4 h-4 text-neutral-400 dark:text-neutral-500 flex-shrink-0" />
+                <span className="text-sm">
+                  {curso.capacidadMaxima ? `${curso.capacidadMaxima} estudiantes` : 'Sin límite'}
+                </span>
+              </div>
+            </div>
+
+            <div className="pb-3 md:pb-0 border-b md:border-b-0 border-neutral-200 dark:border-dark-border">
+              <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide block mb-2">
                 Control de Finalización
               </label>
               <div className="flex items-center gap-2">

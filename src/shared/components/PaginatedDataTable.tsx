@@ -478,10 +478,12 @@ const PaginatedDataTable = <T extends BaseItem>({
 
     return (
         <div className="w-full font-sans px-2 md:px-0">
-            <h1 className="text-3xl font-bold mb-6 text-neutral-900 dark:text-neutral-100 flex items-center gap-3">
-                <div className="h-10 w-1.5 bg-gradient-to-b from-primary to-purple-600 rounded-full"></div>
-                {title}
-            </h1>
+            {title && (
+                <h1 className="text-3xl font-bold mb-6 text-neutral-900 dark:text-neutral-100 flex items-center gap-3">
+                    <div className="h-10 w-1.5 bg-gradient-to-b from-primary to-purple-600 rounded-full"></div>
+                    {title}
+                </h1>
+            )}
 
             <div className="md:bg-white dark:md:bg-dark-card md:rounded-2xl md:shadow-lg md:border md:border-neutral-100 dark:md:border-dark-border overflow-hidden w-full backdrop-blur-sm">
 
@@ -514,27 +516,19 @@ const PaginatedDataTable = <T extends BaseItem>({
 
                             {/* Filtro de Estado */}
                             {statusOptions && statusOptions.length > 0 && (
-                                <div className="relative">
-                                    <select
-                                        id="status-filter"
-                                        value={selectedStatus}
-                                        onChange={(e) => handleStatusChange(e.target.value)}
-                                        className="appearance-none bg-white dark:bg-dark-bg border border-neutral-300 dark:border-dark-border rounded-lg pl-4 pr-10 py-2.5 text-sm font-semibold text-neutral-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer transition-all shadow-md hover:shadow-lg hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={loading}
-                                    >
-                                        {statusOptions.map((option) => (
-                                            <option key={option.value} value={option.value} className="font-semibold">
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {/* Icono de flecha personalizado */}
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
+                                <select
+                                    id="status-filter"
+                                    value={selectedStatus}
+                                    onChange={(e) => handleStatusChange(e.target.value)}
+                                    disabled={loading}
+                                    className="w-full sm:w-auto min-w-[140px]"
+                                >
+                                    {statusOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
                             )}
 
                             {/* Filtros Adicionales */}
