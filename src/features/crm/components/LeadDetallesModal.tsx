@@ -34,7 +34,9 @@ const RELACION_DISPLAY = {
 
 const MEDIO_CONTACTO_DISPLAY = {
   [MedioContactoPreferido.TELEFONO]: 'Teléfono',
+  [MedioContactoPreferido.LLAMADA]: 'Llamada',
   [MedioContactoPreferido.WHATSAPP]: 'WhatsApp',
+  [MedioContactoPreferido.SMS]: 'SMS',
   [MedioContactoPreferido.CORREO]: 'Correo Electrónico',
   [MedioContactoPreferido.PRESENCIAL]: 'Presencial',
 };

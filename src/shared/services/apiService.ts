@@ -120,11 +120,27 @@ class ApiService {
     }
 
     // Si hay error, lanzar ApiError personalizado
+    // Manejar diferentes formatos de error del backend:
+    // - { error: { code, message, details } }
+    // - { error: "mensaje" }
+    // - { message: "mensaje" }
+    const errorMessage = typeof data?.error === 'string'
+      ? data.error
+      : data?.error?.message || data?.message || 'Error desconocido';
+
+    const errorCode = typeof data?.error === 'object'
+      ? data?.error?.code || 'UNKNOWN_ERROR'
+      : 'UNKNOWN_ERROR';
+
+    const errorDetails = typeof data?.error === 'object'
+      ? data?.error?.details
+      : undefined;
+
     throw new ApiError(
       response.status,
-      data?.error?.code || 'UNKNOWN_ERROR',
-      data?.error?.message || data?.message || 'Error desconocido',
-      data?.error?.details
+      errorCode,
+      errorMessage,
+      errorDetails
     );
   }
 

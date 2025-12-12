@@ -44,7 +44,76 @@ export interface Horario {
   aulaNombre?: string;
   aulaCapacidad?: number;
   cursoCapacidadMaxima?: number; // Capacidad máxima del curso
+  estudiantesMatriculados?: number; // Cantidad de estudiantes activos en el curso
+  grupoCursoId?: string; // ID del grupo de curso asociado
 }
+
+/**
+ * Tipos de disponibilidad para código de colores
+ */
+export type DisponibilidadTipo = 'disponible' | 'parcial' | 'casiLleno' | 'lleno' | 'sinLimite';
+
+/**
+ * Calcula el tipo de disponibilidad basado en cupos
+ * @param capacidad - Capacidad máxima del curso
+ * @param matriculados - Estudiantes matriculados
+ * @returns Tipo de disponibilidad para el código de colores
+ */
+export const calcularDisponibilidad = (
+  capacidad?: number,
+  matriculados?: number
+): DisponibilidadTipo => {
+  if (!capacidad || capacidad <= 0) return 'sinLimite';
+
+  const ocupados = matriculados || 0;
+  const porcentaje = (ocupados / capacidad) * 100;
+
+  if (porcentaje >= 100) return 'lleno';
+  if (porcentaje >= 80) return 'casiLleno';
+  if (porcentaje > 0) return 'parcial';
+  return 'disponible';
+};
+
+/**
+ * Estilos para cada tipo de disponibilidad
+ */
+export const DISPONIBILIDAD_STYLES: Record<DisponibilidadTipo, {
+  bg: string;
+  text: string;
+  border: string;
+  label: string;
+}> = {
+  disponible: {
+    bg: 'bg-green-100 dark:bg-green-900/30',
+    text: 'text-green-700 dark:text-green-400',
+    border: 'border-green-300 dark:border-green-700',
+    label: 'Disponible',
+  },
+  parcial: {
+    bg: 'bg-blue-100 dark:bg-blue-900/30',
+    text: 'text-blue-700 dark:text-blue-400',
+    border: 'border-blue-300 dark:border-blue-700',
+    label: 'Cupos disponibles',
+  },
+  casiLleno: {
+    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+    text: 'text-yellow-700 dark:text-yellow-400',
+    border: 'border-yellow-300 dark:border-yellow-700',
+    label: 'Casi lleno',
+  },
+  lleno: {
+    bg: 'bg-red-100 dark:bg-red-900/30',
+    text: 'text-red-700 dark:text-red-400',
+    border: 'border-red-300 dark:border-red-700',
+    label: 'Lleno',
+  },
+  sinLimite: {
+    bg: 'bg-neutral-100 dark:bg-neutral-800',
+    text: 'text-neutral-600 dark:text-neutral-400',
+    border: 'border-neutral-300 dark:border-neutral-600',
+    label: 'Sin límite',
+  },
+};
 
 /**
  * Parámetros para listar horarios

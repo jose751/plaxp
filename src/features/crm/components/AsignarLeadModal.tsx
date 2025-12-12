@@ -48,10 +48,7 @@ export const AsignarLeadModal = ({
 
     setSaving(true);
     try {
-      const response = await asignarLeadApi(leadId, {
-        usuarioIds: selectedUsuarios,
-        sobrescribir: true
-      });
+      const response = await asignarLeadApi(leadId, selectedUsuarios);
 
       if (response.success) {
         onSuccess();

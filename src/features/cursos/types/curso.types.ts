@@ -122,3 +122,163 @@ export interface ActualizarCursoResponse {
   message: string;
   data: Curso;
 }
+
+// ============ TIPOS DE ASISTENCIA ============
+
+/**
+ * Estado de asistencia
+ */
+export type EstadoAsistencia = 'PRESENTE' | 'AUSENTE' | 'TARDANZA' | 'JUSTIFICADO' | 'PERMISO';
+
+/**
+ * Registro de asistencia individual
+ */
+export interface Asistencia {
+  id: string;
+  empresaId: string;
+  estudianteId: string;
+  estudianteNombre: string;
+  cursoId: string;
+  cursoNombre: string;
+  fecha: string;
+  estado: EstadoAsistencia;
+  horaLlegada?: string;
+  minutosTardanza?: number;
+  justificacion?: string;
+  documentoAdjunto?: string;
+  observaciones?: string;
+  registradoPor: string;
+  registradoPorNombre: string;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
+/**
+ * Estudiante con su asistencia para una fecha
+ */
+export interface EstudianteAsistencia {
+  estudianteId: string;
+  estudianteNombre: string;
+  asistencia: Asistencia | null;
+}
+
+/**
+ * Resumen de asistencia de un día
+ */
+export interface ResumenAsistenciaDia {
+  total: number;
+  presentes: number;
+  ausentes: number;
+  tardanzas: number;
+  justificados: number;
+  permisos: number;
+  sinRegistro: number;
+}
+
+/**
+ * Respuesta de asistencia por fecha
+ */
+export interface AsistenciaFechaResponse {
+  success: boolean;
+  data: {
+    cursoId: string;
+    cursoNombre: string;
+    fecha: string;
+    estudiantes: EstudianteAsistencia[];
+    resumen: ResumenAsistenciaDia;
+  };
+}
+
+/**
+ * Datos para guardar asistencia individual
+ */
+export interface AsistenciaIndividualData {
+  estudianteId: string;
+  estado: EstadoAsistencia;
+  horaLlegada?: string;
+  minutosTardanza?: number;
+  justificacion?: string;
+  observaciones?: string;
+}
+
+/**
+ * Datos para guardar asistencias masivas
+ */
+export interface GuardarAsistenciasData {
+  asistencias: AsistenciaIndividualData[];
+}
+
+/**
+ * Respuesta de guardar asistencias
+ */
+export interface GuardarAsistenciasResponse {
+  success: boolean;
+  message: string;
+  data: {
+    registrados: number;
+  };
+}
+
+/**
+ * Datos para actualizar asistencia individual
+ */
+export interface ActualizarAsistenciaData {
+  estado?: EstadoAsistencia;
+  horaLlegada?: string | null;
+  minutosTardanza?: number | null;
+  justificacion?: string | null;
+  documentoAdjunto?: string | null;
+  observaciones?: string;
+}
+
+/**
+ * Respuesta de actualizar asistencia
+ */
+export interface ActualizarAsistenciaResponse {
+  success: boolean;
+  message: string;
+  data: Asistencia;
+}
+
+/**
+ * Resumen de asistencia de un estudiante
+ */
+export interface ResumenAsistenciaEstudiante {
+  estudianteId: string;
+  estudianteNombre: string;
+  totalClases: number;
+  presentes: number;
+  ausentes: number;
+  tardanzas: number;
+  justificados: number;
+  permisos: number;
+  porcentajeAsistencia: number;
+}
+
+/**
+ * Respuesta de resumen de asistencia
+ */
+export interface ResumenAsistenciaResponse {
+  success: boolean;
+  data: ResumenAsistenciaEstudiante;
+}
+
+/**
+ * Parámetros para listar asistencias
+ */
+export interface ListarAsistenciasParams {
+  estudianteId?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  estado?: EstadoAsistencia;
+  pagina?: number;
+  limite?: number;
+}
+
+/**
+ * Respuesta de listar asistencias
+ */
+export interface ListarAsistenciasResponse {
+  success: boolean;
+  data: Asistencia[];
+}

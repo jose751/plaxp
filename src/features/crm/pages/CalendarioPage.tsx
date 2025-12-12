@@ -14,10 +14,11 @@ import {
   HiViewGrid,
   HiViewList,
   HiOutlineCalendar,
+  HiBell,
 } from 'react-icons/hi';
-import { obtenerMisPendientesApi } from '../api/crmApi';
+import { obtenerMisPendientesApi, listarRecordatoriosApi } from '../api/crmApi';
 import { listarUsuariosApi } from '../../users/api/UsersApi';
-import type { CrmActividad, TipoActividad } from '../types/crm.types';
+import type { CrmActividad, TipoActividad, CrmRecordatorio } from '../types/crm.types';
 import { ActividadDetallesModal } from '../components/ActividadDetallesModal';
 
 interface Usuario {
@@ -54,6 +55,7 @@ const TIPO_CONFIG: Record<TipoActividad, { bg: string; bgLight: string; text: st
   WHATSAPP: { bg: 'bg-green-500', bgLight: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600 dark:text-green-400', icon: HiChat, label: 'WhatsApp' },
   REUNION: { bg: 'bg-violet-500', bgLight: 'bg-violet-50 dark:bg-violet-900/20', text: 'text-violet-600 dark:text-violet-400', icon: HiVideoCamera, label: 'Reunión' },
   TAREA: { bg: 'bg-orange-500', bgLight: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600 dark:text-orange-400', icon: HiClipboardList, label: 'Tarea' },
+  RECORDATORIO: { bg: 'bg-sky-500', bgLight: 'bg-sky-50 dark:bg-sky-900/20', text: 'text-sky-600 dark:text-sky-400', icon: HiBell, label: 'Recordatorio' },
   CAMBIO_ETAPA: { bg: 'bg-slate-500', bgLight: 'bg-slate-50 dark:bg-slate-900/20', text: 'text-slate-600 dark:text-slate-400', icon: HiViewGrid, label: 'Cambio' },
 };
 
@@ -75,19 +77,50 @@ export const CalendarioPage = () => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
+  // Convertir recordatorio a formato de actividad para mostrar en calendario
+  const recordatorioToActividad = (rec: CrmRecordatorio): ActividadConLead => ({
+    id: `rec-${rec.id}`,
+    empresaId: rec.empresaId,
+    leadId: rec.leadId,
+    tipo: 'RECORDATORIO' as TipoActividad,
+    contenido: `${rec.titulo}${rec.descripcion ? `: ${rec.descripcion}` : ''}`,
+    fechaInicio: rec.fechaProgramada,
+    fechaFin: rec.fechaProgramada,
+    resultado: rec.notasResultado,
+    esNotaAcademica: false,
+    fechaCreacion: rec.creadoEn,
+    leadInfo: rec.lead ? {
+      id: rec.lead.id,
+      contactoNombre: rec.lead.contactoNombre,
+      contactoApellido: rec.lead.contactoApellido,
+      etapaNombre: ''
+    } : undefined
+  });
+
   // Cargar datos
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [actividadesRes, usuariosRes] = await Promise.all([
+        const [actividadesRes, recordatoriosRes, usuariosRes] = await Promise.all([
           obtenerMisPendientesApi(),
+          listarRecordatoriosApi({ estado: 'PENDIENTE' }),
           listarUsuariosApi({ estado: 'activo', pageSize: 100 })
         ]);
 
+        let todasActividades: ActividadConLead[] = [];
+
         if (actividadesRes.success) {
-          setActividades(actividadesRes.data as ActividadConLead[]);
+          todasActividades = actividadesRes.data as ActividadConLead[];
         }
+
+        // Agregar recordatorios pendientes como actividades
+        if (recordatoriosRes.success && recordatoriosRes.data) {
+          const recordatoriosComoActividades = recordatoriosRes.data.map(recordatorioToActividad);
+          todasActividades = [...todasActividades, ...recordatoriosComoActividades];
+        }
+
+        setActividades(todasActividades);
 
         if (usuariosRes.success) {
           setUsuarios(usuariosRes.data.map((u: any) => ({
@@ -201,9 +234,9 @@ export const CalendarioPage = () => {
       .slice(0, 5);
   }, [actividadesFiltradas]);
 
-  // Formatear hora
+  // Formatear hora en formato 12h (AM/PM)
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateStr).toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
   // Abrir modal de actividad

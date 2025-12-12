@@ -11,10 +11,14 @@ import {
   FaThumbsDown,
   FaArrowLeft,
   FaExclamationTriangle,
+  FaInfoCircle,
+  FaEye,
+  FaEyeSlash,
+  FaUndo,
 } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import { listarEtapasApi, eliminarEtapaApi, actualizarEtapaApi } from '../api/crmApi';
-import type { CrmEtapa } from '../types/crm.types';
+import type { CrmEtapa, EliminarEtapaResult } from '../types/crm.types';
 import { TipoSistema } from '../types/crm.types';
 import { usePermissions } from '../../../shared/hooks/usePermissions';
 import { EtapaModal } from '../components/EtapaModal';
@@ -30,15 +34,22 @@ export const CrmEtapasPage = () => {
   const [deleting, setDeleting] = useState(false);
   const [draggedItem, setDraggedItem] = useState<CrmEtapa | null>(null);
 
+  // Modal de resultado de eliminación
+  const [resultModalOpen, setResultModalOpen] = useState(false);
+  const [deleteResult, setDeleteResult] = useState<EliminarEtapaResult | null>(null);
+
   // Modal de crear/editar
   const [etapaModalOpen, setEtapaModalOpen] = useState(false);
   const [editingEtapaId, setEditingEtapaId] = useState<string | null>(null);
+
+  // Filtro de inactivas
+  const [mostrarInactivas, setMostrarInactivas] = useState(false);
 
   const fetchEtapas = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await listarEtapasApi();
+      const response = await listarEtapasApi(undefined, mostrarInactivas);
       if (response.success && response.data) {
         const etapasData = Array.isArray(response.data) ? response.data : [];
         const sorted = [...etapasData].sort((a, b) => (a.orden || 0) - (b.orden || 0));
@@ -51,7 +62,7 @@ export const CrmEtapasPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mostrarInactivas]);
 
   useEffect(() => {
     fetchEtapas();
@@ -71,16 +82,34 @@ export const CrmEtapasPage = () => {
     fetchEtapas();
   };
 
+  const handleReactivar = async (etapa: CrmEtapa) => {
+    try {
+      const response = await actualizarEtapaApi(etapa.id, { activo: true });
+      if (response.success) {
+        fetchEtapas();
+      } else {
+        setError('Error al reactivar la etapa');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al reactivar la etapa');
+    }
+  };
+
   const handleDelete = async () => {
     if (!etapaToDelete) return;
 
     try {
       setDeleting(true);
       const response = await eliminarEtapaApi(etapaToDelete.id);
-      if (response.success) {
-        setEtapas(prev => prev.filter(e => e.id !== etapaToDelete.id));
+      if (response.success && response.data) {
+        // Guardar resultado para mostrar en modal
+        setDeleteResult(response.data);
         setDeleteModalOpen(false);
         setEtapaToDelete(null);
+        setResultModalOpen(true);
+
+        // Recargar etapas para reflejar cambios
+        fetchEtapas();
       } else {
         setError(response.message || 'Error al eliminar la etapa');
       }
@@ -200,29 +229,32 @@ export const CrmEtapasPage = () => {
         {list.map((etapa) => (
           <div
             key={etapa.id}
-            draggable
-            onDragStart={(e) => handleDragStart(e, etapa)}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, etapa)}
+            draggable={etapa.activo}
+            onDragStart={(e) => etapa.activo && handleDragStart(e, etapa)}
+            onDragOver={etapa.activo ? handleDragOver : undefined}
+            onDrop={(e) => etapa.activo && handleDrop(e, etapa)}
             className={`
-              p-3 sm:p-4 bg-white dark:bg-dark-card rounded-lg border border-neutral-200 dark:border-dark-border
-              shadow-sm hover:shadow-md transition-all cursor-move
+              p-3 sm:p-4 rounded-lg border shadow-sm transition-all
+              ${etapa.activo
+                ? 'bg-white dark:bg-dark-card border-neutral-200 dark:border-dark-border hover:shadow-md cursor-move'
+                : 'bg-neutral-50 dark:bg-dark-card/50 border-neutral-300 dark:border-dark-border/50 opacity-60'
+              }
               ${draggedItem?.id === etapa.id ? 'opacity-50' : ''}
             `}
           >
             {/* Fila principal */}
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="text-neutral-400 dark:text-neutral-500 cursor-grab active:cursor-grabbing">
+              <div className={`${etapa.activo ? 'text-neutral-400 dark:text-neutral-500 cursor-grab active:cursor-grabbing' : 'text-neutral-300 dark:text-neutral-600'}`}>
                 <FaGripVertical className="w-4 h-4" />
               </div>
 
               <div
-                className="w-5 h-5 rounded-full flex-shrink-0 border-2 border-white dark:border-dark-card shadow-sm"
+                className={`w-5 h-5 rounded-full flex-shrink-0 border-2 border-white dark:border-dark-card shadow-sm ${!etapa.activo ? 'opacity-50' : ''}`}
                 style={{ backgroundColor: etapa.color }}
               />
 
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                <p className={`font-medium truncate ${etapa.activo ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400'}`}>
                   {etapa.nombre}
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 sm:hidden">
@@ -239,7 +271,17 @@ export const CrmEtapasPage = () => {
                 {getEstadoBadge(etapa.activo)}
 
                 <div className="flex items-center gap-1 ml-2">
-                  {hasPermission('crm.editar') && (
+                  {/* Botón reactivar para etapas inactivas */}
+                  {!etapa.activo && (
+                    <button
+                      onClick={() => handleReactivar(etapa)}
+                      className="p-2 text-neutral-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                      title="Reactivar"
+                    >
+                      <FaUndo className="w-4 h-4" />
+                    </button>
+                  )}
+                  {etapa.activo && (
                     <button
                       onClick={() => handleOpenEditModal(etapa.id)}
                       className="p-2 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -248,7 +290,7 @@ export const CrmEtapasPage = () => {
                       <FaEdit className="w-4 h-4" />
                     </button>
                   )}
-                  {hasPermission('crm.eliminar') && (
+                  {etapa.activo && (
                     <button
                       onClick={() => {
                         setEtapaToDelete(etapa);
@@ -265,7 +307,17 @@ export const CrmEtapasPage = () => {
 
               {/* Móvil: solo acciones */}
               <div className="flex sm:hidden items-center gap-1">
-                {hasPermission('crm.editar') && (
+                {/* Botón reactivar para etapas inactivas */}
+                {!etapa.activo && (
+                  <button
+                    onClick={() => handleReactivar(etapa)}
+                    className="p-2 text-neutral-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                    title="Reactivar"
+                  >
+                    <FaUndo className="w-4 h-4" />
+                  </button>
+                )}
+                {etapa.activo && (
                   <button
                     onClick={() => handleOpenEditModal(etapa.id)}
                     className="p-2 text-neutral-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -274,7 +326,7 @@ export const CrmEtapasPage = () => {
                     <FaEdit className="w-4 h-4" />
                   </button>
                 )}
-                {hasPermission('crm.eliminar') && (
+                {etapa.activo && (
                   <button
                     onClick={() => {
                       setEtapaToDelete(etapa);
@@ -334,15 +386,40 @@ export const CrmEtapasPage = () => {
               Configura las etapas por las que pasan tus prospectos. Arrastra para reordenar.
             </p>
           </div>
-          {hasPermission('crm.crear') && (
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {/* Toggle mostrar inactivas */}
             <button
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors shadow-sm w-full sm:w-auto"
+              onClick={() => setMostrarInactivas(!mostrarInactivas)}
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors w-full sm:w-auto ${
+                mostrarInactivas
+                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
+                  : 'bg-neutral-100 dark:bg-dark-hover text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-dark-border'
+              }`}
             >
-              <FaPlus className="w-4 h-4" />
-              Nueva Etapa
+              {mostrarInactivas ? (
+                <>
+                  <FaEye className="w-4 h-4" />
+                  <span className="hidden sm:inline">Ocultando inactivas</span>
+                  <span className="sm:hidden">Inactivas</span>
+                </>
+              ) : (
+                <>
+                  <FaEyeSlash className="w-4 h-4" />
+                  <span className="hidden sm:inline">Mostrar inactivas</span>
+                  <span className="sm:hidden">Inactivas</span>
+                </>
+              )}
             </button>
-          )}
+            {hasPermission('crm.crear') && (
+              <button
+                onClick={handleOpenCreateModal}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors shadow-sm w-full sm:w-auto"
+              >
+                <FaPlus className="w-4 h-4" />
+                Nueva Etapa
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -407,6 +484,56 @@ export const CrmEtapasPage = () => {
               >
                 {deleting && <CgSpinner className="w-4 h-4 animate-spin" />}
                 Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de resultado de eliminación */}
+      {resultModalOpen && deleteResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-xl border border-neutral-200 dark:border-dark-border w-full max-w-md mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                {deleteResult.accion === 'eliminada' ? (
+                  <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <FaCheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <FaInfoCircle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                    {deleteResult.accion === 'eliminada' ? 'Etapa eliminada' : 'Etapa desactivada'}
+                  </h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    {deleteResult.accion === 'eliminada' ? 'Eliminación permanente' : 'La etapa fue desactivada'}
+                  </p>
+                </div>
+              </div>
+              <p className="text-neutral-600 dark:text-neutral-400">
+                {deleteResult.mensaje}
+              </p>
+              {deleteResult.accion === 'desactivada' && (
+                <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    La etapa no aparecerá en el tablero pero los leads asociados mantienen su historial.
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-neutral-200 dark:border-dark-border">
+              <button
+                onClick={() => {
+                  setResultModalOpen(false);
+                  setDeleteResult(null);
+                }}
+                className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors font-medium"
+              >
+                Entendido
               </button>
             </div>
           </div>

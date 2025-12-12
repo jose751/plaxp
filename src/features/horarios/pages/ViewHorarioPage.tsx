@@ -14,6 +14,7 @@ import {
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerHorarioPorIdApi, eliminarHorarioApi } from '../api/horariosApi';
 import type { Horario } from '../types/horario.types';
+import { calcularDisponibilidad, DISPONIBILIDAD_STYLES } from '../types/horario.types';
 // TODO: Habilitar permisos cuando estén configurados
 // import { usePermissions } from '../../../shared/hooks/usePermissions';
 import { LoadingOverlay } from '../../../shared/components/LoadingOverlay';
@@ -260,19 +261,38 @@ export const ViewHorarioPage = () => {
                 </div>
               )}
 
-              {horario.cursoCapacidadMaxima && (
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                    <FaUsers className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+              {/* Disponibilidad con código de colores */}
+              {(() => {
+                const disponibilidadTipo = calcularDisponibilidad(horario.cursoCapacidadMaxima, horario.estudiantesMatriculados);
+                const disponibilidadStyle = DISPONIBILIDAD_STYLES[disponibilidadTipo];
+                const matriculados = horario.estudiantesMatriculados || 0;
+                const capacidad = horario.cursoCapacidadMaxima;
+                const cuposDisponibles = capacidad ? capacidad - matriculados : null;
+
+                return (
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${disponibilidadStyle.bg}`}>
+                      <FaUsers className={`w-4 h-4 ${disponibilidadStyle.text}`} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">Disponibilidad</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${disponibilidadStyle.bg} ${disponibilidadStyle.text} border ${disponibilidadStyle.border}`}>
+                          {disponibilidadStyle.label}
+                        </span>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                          {capacidad ? `${matriculados}/${capacidad} estudiantes` : 'Sin límite'}
+                        </p>
+                      </div>
+                      {cuposDisponibles !== null && cuposDisponibles > 0 && (
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                          {cuposDisponibles} cupo{cuposDisponibles !== 1 ? 's' : ''} disponible{cuposDisponibles !== 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">Capacidad del Curso</p>
-                    <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                      {horario.cursoCapacidadMaxima} personas
-                    </p>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
 

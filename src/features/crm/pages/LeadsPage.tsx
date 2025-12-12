@@ -159,16 +159,15 @@ export const LeadsPage = () => {
     limit: number,
     query: string,
     status?: string,
-    additionalFilters?: Record<string, any>
+    _additionalFilters?: Record<string, any>
   ): Promise<PaginatedResponse<LeadTableItem>> => {
     try {
-      const response = await listarLeadsApi({
-        pagina: page,
-        limite: limit,
-        busqueda: query || undefined,
-        etapaId: status === 'todos' ? undefined : status,
-        soloMisLeads: additionalFilters?.soloMisLeads || undefined,
-      });
+      const response = await listarLeadsApi(
+        page,
+        limit,
+        query || undefined,
+        status === 'todos' ? undefined : status
+      );
 
       if (!response.success) {
         throw new Error('Error al obtener leads');

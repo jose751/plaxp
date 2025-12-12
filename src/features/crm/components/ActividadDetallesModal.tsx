@@ -10,7 +10,7 @@ import {
   HiExternalLink,
   HiPencil,
 } from 'react-icons/hi';
-import { FaWhatsapp, FaStickyNote } from 'react-icons/fa';
+import { FaWhatsapp, FaStickyNote, FaBell } from 'react-icons/fa';
 import type { CrmActividad, TipoActividad } from '../types/crm.types';
 
 interface ActividadDetallesModalProps {
@@ -59,6 +59,12 @@ const TIPO_CONFIG: Record<TipoActividad, { label: string; icon: React.ReactNode;
     bgColor: 'bg-orange-100 dark:bg-orange-900/30',
     textColor: 'text-orange-600 dark:text-orange-400',
   },
+  RECORDATORIO: {
+    label: 'Recordatorio',
+    icon: <FaBell className="w-5 h-5" />,
+    bgColor: 'bg-sky-100 dark:bg-sky-900/30',
+    textColor: 'text-sky-600 dark:text-sky-400',
+  },
   CAMBIO_ETAPA: {
     label: 'Cambio de Etapa',
     icon: <HiClipboardList className="w-5 h-5" />,
@@ -74,8 +80,9 @@ const formatDateTime = (dateStr: string) => {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
+    hour12: true,
   });
 };
 
@@ -90,12 +97,9 @@ export const ActividadDetallesModal = ({
   if (!isOpen || !actividad) return null;
 
   const tipoConfig = TIPO_CONFIG[actividad.tipo] || TIPO_CONFIG.NOTA;
-  const esTareaPendiente =
-    (actividad.tipo === 'TAREA' || actividad.tipo === 'REUNION') &&
-    new Date(actividad.fechaFin) > new Date();
-  const esTareaVencida =
-    (actividad.tipo === 'TAREA' || actividad.tipo === 'REUNION') &&
-    new Date(actividad.fechaFin) < new Date();
+  const tienesFecha = actividad.tipo === 'TAREA' || actividad.tipo === 'REUNION' || actividad.tipo === 'RECORDATORIO';
+  const esTareaPendiente = tienesFecha && new Date(actividad.fechaFin) > new Date();
+  const esTareaVencida = tienesFecha && new Date(actividad.fechaFin) < new Date();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -158,8 +162,8 @@ export const ActividadDetallesModal = ({
             </div>
           </div>
 
-          {/* Fechas para tareas/reuniones */}
-          {(actividad.tipo === 'TAREA' || actividad.tipo === 'REUNION') && (
+          {/* Fechas para tareas/reuniones/recordatorios */}
+          {tienesFecha && (
             <div className="bg-neutral-50 dark:bg-dark-bg rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-3">
                 <HiClock className="w-4 h-4 text-neutral-400 flex-shrink-0" />

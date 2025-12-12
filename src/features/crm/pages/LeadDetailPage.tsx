@@ -377,7 +377,9 @@ export const LeadDetailPage = () => {
                       {lead.contacto.medioPreferido
                         ? {
                             TELEFONO: 'Teléfono',
+                            LLAMADA: 'Llamada',
                             WHATSAPP: 'WhatsApp',
+                            SMS: 'SMS',
                             CORREO: 'Correo',
                             PRESENCIAL: 'Presencial'
                           }[lead.contacto.medioPreferido] || lead.contacto.medioPreferido

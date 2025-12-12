@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Horario, DiaSemana } from '../types/horario.types';
+import { calcularDisponibilidad, type DisponibilidadTipo } from '../types/horario.types';
 
 interface WeeklyScheduleProps {
   horariosPorDia: { [dia: number]: Horario[] };
@@ -66,24 +67,13 @@ const isToday = (dia: DiaSemana, weekStart?: Date): boolean => {
   return dia === todayDia;
 };
 
-// Colores para diferenciar horarios (paleta basada en primary #6a48bf)
-const COLORES = [
-  { bg: 'bg-[#6a48bf] dark:bg-[#7c5cd4]', border: 'border-[#5a3aa8]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#48a0bf] dark:bg-[#5cb8d4]', border: 'border-[#3a8ba8]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#bf6a48] dark:bg-[#d47c5c]', border: 'border-[#a85a3a]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#48bf6a] dark:bg-[#5cd47c]', border: 'border-[#3aa85a]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#bf48a0] dark:bg-[#d45cb8]', border: 'border-[#a83a8b]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#a0bf48] dark:bg-[#b8d45c]', border: 'border-[#8ba83a]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#4868bf] dark:bg-[#5c7cd4]', border: 'border-[#3a58a8]', text: 'text-white', subtext: 'text-white/80' },
-  { bg: 'bg-[#bf4868] dark:bg-[#d45c7c]', border: 'border-[#a83a58]', text: 'text-white', subtext: 'text-white/80' },
-];
-
-const getColorByCursoId = (cursoId: string) => {
-  let hash = 0;
-  for (let i = 0; i < cursoId.length; i++) {
-    hash = cursoId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return COLORES[Math.abs(hash) % COLORES.length];
+// Colores de disponibilidad para el card completo
+const DISPONIBILIDAD_COLORES: Record<DisponibilidadTipo, { bg: string; border: string; text: string; subtext: string }> = {
+  disponible: { bg: 'bg-green-100 dark:bg-green-900/40', border: 'border-green-500', text: 'text-green-800 dark:text-green-200', subtext: 'text-green-600 dark:text-green-300' },
+  parcial: { bg: 'bg-blue-100 dark:bg-blue-900/40', border: 'border-blue-500', text: 'text-blue-800 dark:text-blue-200', subtext: 'text-blue-600 dark:text-blue-300' },
+  casiLleno: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', border: 'border-yellow-500', text: 'text-yellow-800 dark:text-yellow-200', subtext: 'text-yellow-600 dark:text-yellow-300' },
+  lleno: { bg: 'bg-red-100 dark:bg-red-900/40', border: 'border-red-500', text: 'text-red-800 dark:text-red-200', subtext: 'text-red-600 dark:text-red-300' },
+  sinLimite: { bg: 'bg-neutral-100 dark:bg-neutral-800', border: 'border-neutral-400', text: 'text-neutral-800 dark:text-neutral-200', subtext: 'text-neutral-600 dark:text-neutral-400' },
 };
 
 export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({
@@ -196,25 +186,36 @@ export const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({
                   {(horariosPorDia[dia] || []).map((horario) => {
                     const { top, height } = calcularPosicion(horario.horaInicio, horario.duracionMinutos);
                     const heightNum = parseFloat(height);
-                    const color = getColorByCursoId(horario.cursoId);
+                    const disponibilidad = calcularDisponibilidad(horario.cursoCapacidadMaxima, horario.estudiantesMatriculados);
+                    const color = DISPONIBILIDAD_COLORES[disponibilidad];
+                    const matriculados = horario.estudiantesMatriculados || 0;
+                    const capacidad = horario.cursoCapacidadMaxima;
 
                     return (
                       <div
                         key={horario.id}
                         onClick={() => onHorarioClick?.(horario)}
-                        className={`absolute left-1 right-1 rounded-md ${color.bg} border-l-[3px] ${color.border} cursor-pointer hover:brightness-95 dark:hover:brightness-110 transition-all overflow-hidden`}
+                        className={`absolute left-1 right-1 rounded-md ${color.bg} ${color.border} border-l-4 cursor-pointer hover:shadow-md transition-all overflow-hidden group`}
                         style={{ top, height, minHeight: '24px' }}
-                        title={`${horario.cursoNombre || 'Curso'}\n${horario.horaInicio} - ${horario.horaFin}`}
+                        title={`${horario.cursoNombre || 'Curso'}\n${horario.horaInicio} - ${horario.horaFin}\n${capacidad ? `Cupos: ${matriculados}/${capacidad}` : 'Sin límite'}`}
                       >
-                        <div className="px-2 h-full flex flex-col justify-center">
+                        <div className="px-2 py-1 h-full flex flex-col justify-center">
                           {showCursoName && (
                             <div className={`text-xs font-semibold ${color.text} truncate leading-tight`}>
                               {horario.cursoNombre || 'Curso'}
                             </div>
                           )}
                           {heightNum > 5 && (
-                            <div className={`text-[10px] ${color.subtext} truncate`}>
-                              {horario.horaInicio} - {horario.horaFin}
+                            <div className={`text-[10px] ${color.subtext} truncate flex items-center gap-1`}>
+                              <span>{horario.horaInicio} - {horario.horaFin}</span>
+                              {capacidad && (
+                                <span className="font-medium">• {matriculados}/{capacidad}</span>
+                              )}
+                            </div>
+                          )}
+                          {heightNum <= 5 && heightNum > 3 && capacidad && (
+                            <div className={`text-[10px] ${color.subtext} font-medium`}>
+                              {matriculados}/{capacidad}
                             </div>
                           )}
                         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, type JSX } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaDesktop, FaBuilding, FaClock, FaCalendarAlt, FaCalendarDay } from 'react-icons/fa';
+import { FaDesktop, FaBuilding, FaClock, FaCalendarAlt, FaCalendarDay, FaUsers } from 'react-icons/fa';
 import { ViewHorarioModal } from '../components/ViewHorarioModal';
 import PaginatedDataTable, {
   type PaginatedResponse,
@@ -12,7 +12,7 @@ import { listarHorariosApi } from '../api/horariosApi';
 import { obtenerAulasPorSucursalApi } from '../../aulas/api/aulasApi';
 import { obtenerTodasSucursalesApi } from '../../sucursales/api/sucursalesApi';
 import type { Horario, DiaSemana } from '../types/horario.types';
-import { DIAS_SEMANA } from '../types/horario.types';
+import { DIAS_SEMANA, calcularDisponibilidad, DISPONIBILIDAD_STYLES } from '../types/horario.types';
 import type { Aula } from '../../aulas/types/aula.types';
 import type { Sucursal } from '../../sucursales/types/sucursal.types';
 import { AuthContext } from '../../../shared/contexts/AuthContext';
@@ -25,6 +25,7 @@ interface HorarioItem extends BaseItem {
   cursoNombre: string;
   diaSemanaTexto: string;
   horario: JSX.Element;
+  disponibilidad: JSX.Element;
   modalidad: JSX.Element;
   aulaNombre: string;
 }
@@ -34,6 +35,7 @@ const columns: ColumnDefinition<HorarioItem>[] = [
   { key: 'cursoNombre', header: 'Curso' },
   { key: 'diaSemanaTexto', header: 'Día' },
   { key: 'horario', header: 'Horario' },
+  { key: 'disponibilidad', header: 'Cupos' },
   { key: 'modalidad', header: 'Modalidad' },
   { key: 'aulaNombre', header: 'Aula' },
 ];
@@ -105,11 +107,25 @@ const fetchHorarios = async (
         </span>
       );
 
+      // Badge de disponibilidad con código de colores
+      const disponibilidadTipo = calcularDisponibilidad(horario.cursoCapacidadMaxima, horario.estudiantesMatriculados);
+      const disponibilidadStyle = DISPONIBILIDAD_STYLES[disponibilidadTipo];
+      const matriculados = horario.estudiantesMatriculados || 0;
+      const capacidad = horario.cursoCapacidadMaxima;
+
+      const disponibilidadBadge = (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${disponibilidadStyle.bg} ${disponibilidadStyle.text} border ${disponibilidadStyle.border}`}>
+          <FaUsers className="w-3 h-3" />
+          {capacidad ? `${matriculados}/${capacidad}` : 'Sin límite'}
+        </span>
+      );
+
       return {
         id: horario.id,
         cursoNombre: horario.cursoNombre || 'Sin nombre',
         diaSemanaTexto: horario.diaSemanaTexto,
         horario: horarioBadge,
+        disponibilidad: disponibilidadBadge,
         modalidad: modalidadBadge,
         aulaNombre: horario.aulaNombre || 'Sin aula',
       };

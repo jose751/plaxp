@@ -14,7 +14,19 @@ import { PeriodosLectivosPage, CreateEditPeriodoLectivoPage, ViewPeriodoLectivoP
 import { PlanesPagoPage, CreateEditPlanPagoPage, ViewPlanPagoPage } from './features/planesPago';
 import { MatriculasPagosPage, ViewMatriculaPagoPage, PrintReciboPage } from './features/matriculasPagos';
 import { MatriculasPage, ViewMatriculaPage, CreateMatriculaPage } from './features/matriculas';
-import { CrmTableroPage, CrmEtapasPage, LeadsPage, LeadDetailPage, CalendarioPage } from './features/crm';
+import {
+  CrmTableroPage,
+  CrmEtapasPage,
+  LeadsPage,
+  LeadDetailPage,
+  CalendarioPage,
+  ContactosPage,
+  ContactoDetailPage,
+  OportunidadesPage,
+  OportunidadDetallePage,
+  CrmPipelinesPage,
+  IntegracionesPage,
+} from './features/crm';
 import { ReportesPage } from './features/reportes';
 import { LandingPage } from './features/homePage/pages/LandingPage';
 import { DemoPage } from './features/homePage/pages/DemoPage';
@@ -516,6 +528,58 @@ export const AppContent = () => {
         <ProtectedRoute>
           <MainLayout>
             <CalendarioPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Contactos CRM */}
+      <Route path="/crm/contactos" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ContactosPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/crm/contactos/view/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ContactoDetailPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Oportunidades CRM */}
+      <Route path="/crm/oportunidades" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <OportunidadesPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/crm/oportunidades/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <OportunidadDetallePage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Pipelines CRM */}
+      <Route path="/crm/pipelines" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <CrmPipelinesPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Integraciones CRM */}
+      <Route path="/crm/integraciones" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <IntegracionesPage />
           </MainLayout>
         </ProtectedRoute>
       } />

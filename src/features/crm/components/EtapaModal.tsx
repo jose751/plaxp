@@ -13,9 +13,10 @@ interface EtapaModalProps {
   onClose: () => void;
   onSuccess: () => void;
   etapaId?: string | null;
+  pipelineId?: string | null;
 }
 
-export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalProps) => {
+export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId, pipelineId }: EtapaModalProps) => {
   const isEditing = Boolean(etapaId);
 
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
     nombre: '',
     color: COLORES_ETAPA[0].value,
     tipoSistema: TipoSistema.PROCESO as TipoSistema,
+    probabilidadDefault: 0,
     activo: true,
   });
 
@@ -46,6 +48,7 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
           nombre: '',
           color: COLORES_ETAPA[0].value,
           tipoSistema: TipoSistema.PROCESO,
+          probabilidadDefault: 0,
           activo: true,
         });
         setError(null);
@@ -66,6 +69,7 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
           nombre: etapa.nombre,
           color: etapa.color,
           tipoSistema: tipoNormalizado,
+          probabilidadDefault: etapa.probabilidadDefault ?? 0,
           activo: etapa.activo,
         });
       } else {
@@ -102,12 +106,18 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
     try {
       setSaving(true);
 
-      const payload = {
+      const payload: any = {
         nombre: currentFormData.nombre.trim(),
         color: currentFormData.color,
         tipoSistema: currentFormData.tipoSistema,
+        probabilidadDefault: currentFormData.probabilidadDefault,
         activo: currentFormData.activo,
       };
+
+      // Incluir pipelineId solo al crear
+      if (!isEditing && pipelineId) {
+        payload.pipelineId = pipelineId;
+      }
 
       console.log('📤 Payload:', JSON.stringify(payload));
 
@@ -219,7 +229,7 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
                       type="button"
                       onClick={() => {
                         console.log('🔵 Click PROCESO');
-                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PROCESO }));
+                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PROCESO, probabilidadDefault: prev.probabilidadDefault === 100 || prev.probabilidadDefault === 0 ? 50 : prev.probabilidadDefault }));
                       }}
                       className={`
                         p-2 sm:p-3 rounded-lg border-2 text-center transition-all
@@ -241,7 +251,7 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
                       type="button"
                       onClick={() => {
                         console.log('🟢 Click GANADO');
-                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.GANADO }));
+                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.GANADO, probabilidadDefault: 100 }));
                       }}
                       className={`
                         p-2 sm:p-3 rounded-lg border-2 text-center transition-all
@@ -263,7 +273,7 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
                       type="button"
                       onClick={() => {
                         console.log('🔴 Click PERDIDO');
-                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PERDIDO }));
+                        setFormData(prev => ({ ...prev, tipoSistema: TipoSistema.PERDIDO, probabilidadDefault: 0 }));
                       }}
                       className={`
                         p-2 sm:p-3 rounded-lg border-2 text-center transition-all
@@ -281,6 +291,39 @@ export const EtapaModal = ({ isOpen, onClose, onSuccess, etapaId }: EtapaModalPr
                       </p>
                     </button>
                   </div>
+                </div>
+
+                {/* Probabilidad Default */}
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                    Probabilidad por defecto (%)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={formData.probabilidadDefault}
+                      onChange={(e) => setFormData(prev => ({ ...prev, probabilidadDefault: parseInt(e.target.value) }))}
+                      className="flex-1 h-2 bg-neutral-200 dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <span className={`
+                      min-w-[48px] text-center px-2 py-1 rounded text-sm font-medium
+                      ${formData.probabilidadDefault >= 70 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                        formData.probabilidadDefault >= 30 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                        'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}
+                    `}>
+                      {formData.probabilidadDefault}%
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                    {formData.tipoSistema === TipoSistema.GANADO
+                      ? 'Recomendado: 100% para etapas "Ganado"'
+                      : formData.tipoSistema === TipoSistema.PERDIDO
+                      ? 'Recomendado: 0% para etapas "Perdido"'
+                      : 'Esta probabilidad se asignará automáticamente a las oportunidades que lleguen a esta etapa'}
+                  </p>
                 </div>
 
                 {/* Estado activo */}

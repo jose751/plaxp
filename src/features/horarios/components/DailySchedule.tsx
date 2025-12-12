@@ -1,6 +1,16 @@
 import React from 'react';
 import type { Horario } from '../types/horario.types';
+import { calcularDisponibilidad, type DisponibilidadTipo } from '../types/horario.types';
 import type { Aula } from '../../aulas/types/aula.types';
+
+// Colores de disponibilidad para el card completo
+const DISPONIBILIDAD_COLORES: Record<DisponibilidadTipo, { bg: string; border: string; text: string; subtext: string }> = {
+  disponible: { bg: 'bg-green-100 dark:bg-green-900/40', border: 'border-green-500', text: 'text-green-800 dark:text-green-200', subtext: 'text-green-600 dark:text-green-300' },
+  parcial: { bg: 'bg-blue-100 dark:bg-blue-900/40', border: 'border-blue-500', text: 'text-blue-800 dark:text-blue-200', subtext: 'text-blue-600 dark:text-blue-300' },
+  casiLleno: { bg: 'bg-yellow-100 dark:bg-yellow-900/40', border: 'border-yellow-500', text: 'text-yellow-800 dark:text-yellow-200', subtext: 'text-yellow-600 dark:text-yellow-300' },
+  lleno: { bg: 'bg-red-100 dark:bg-red-900/40', border: 'border-red-500', text: 'text-red-800 dark:text-red-200', subtext: 'text-red-600 dark:text-red-300' },
+  sinLimite: { bg: 'bg-neutral-100 dark:bg-neutral-800', border: 'border-neutral-400', text: 'text-neutral-800 dark:text-neutral-200', subtext: 'text-neutral-600 dark:text-neutral-400' },
+};
 
 interface DailyScheduleProps {
   aulas: Aula[];
@@ -136,7 +146,6 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
 
             {/* Columnas por aula */}
             {aulas.map((aula) => {
-              const color = aulaColores[aula.id];
               const horariosAula = horariosPorAula[aula.id] || [];
 
               return (
@@ -157,27 +166,34 @@ export const DailySchedule: React.FC<DailyScheduleProps> = ({
                   {horariosAula.map((horario) => {
                     const { top, height } = calcularPosicion(horario.horaInicio, horario.duracionMinutos);
                     const heightNum = parseFloat(height);
+                    const disponibilidad = calcularDisponibilidad(horario.cursoCapacidadMaxima, horario.estudiantesMatriculados);
+                    const dispColor = DISPONIBILIDAD_COLORES[disponibilidad];
+                    const matriculados = horario.estudiantesMatriculados || 0;
+                    const capacidad = horario.cursoCapacidadMaxima;
 
                     return (
                       <div
                         key={horario.id}
                         onClick={() => onHorarioClick?.(horario)}
-                        className={`absolute left-1 right-1 rounded-md ${color?.bg || 'bg-violet-500'} border-l-[3px] ${color?.border || 'border-violet-600'} cursor-pointer hover:brightness-95 dark:hover:brightness-110 transition-all overflow-hidden shadow-sm`}
+                        className={`absolute left-1 right-1 rounded-md ${dispColor.bg} ${dispColor.border} border-l-4 cursor-pointer hover:shadow-md transition-all overflow-hidden`}
                         style={{ top, height, minHeight: '28px' }}
-                        title={`${horario.cursoNombre || 'Curso'}\n${horario.horaInicio} - ${horario.horaFin}`}
+                        title={`${horario.cursoNombre || 'Curso'}\n${horario.horaInicio} - ${horario.horaFin}\n${capacidad ? `Cupos: ${matriculados}/${capacidad}` : 'Sin límite'}`}
                       >
                         <div className="px-2 py-1 h-full flex flex-col justify-center">
-                          <div className="text-xs font-semibold text-white truncate leading-tight">
+                          <div className={`text-xs font-semibold ${dispColor.text} truncate leading-tight`}>
                             {horario.cursoNombre || 'Curso'}
                           </div>
                           {heightNum > 4 && (
-                            <div className="text-[10px] text-white/80 truncate">
-                              {horario.horaInicio} - {horario.horaFin}
+                            <div className={`text-[10px] ${dispColor.subtext} truncate flex items-center gap-1`}>
+                              <span>{horario.horaInicio} - {horario.horaFin}</span>
+                              {capacidad && (
+                                <span className="font-medium">• {matriculados}/{capacidad}</span>
+                              )}
                             </div>
                           )}
-                          {heightNum > 6 && horario.profesorNombre && (
-                            <div className="text-[10px] text-white/70 truncate mt-0.5">
-                              {horario.profesorNombre}
+                          {heightNum <= 4 && capacidad && (
+                            <div className={`text-[10px] ${dispColor.subtext} font-medium`}>
+                              {matriculados}/{capacidad}
                             </div>
                           )}
                         </div>

@@ -7,6 +7,7 @@ import {
   FaClock,
   FaChevronLeft,
   FaChevronRight,
+  FaInfoCircle,
 } from 'react-icons/fa';
 import { WeeklySchedule } from '../components/WeeklySchedule';
 import { DailySchedule } from '../components/DailySchedule';
@@ -526,6 +527,38 @@ export const HorariosCalendarioPage = () => {
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+
+            {/* Leyenda de disponibilidad - solo en desktop */}
+            <div className="hidden lg:block border-t border-neutral-200 dark:border-dark-border pt-4 mt-4">
+              <div className="flex items-center gap-1.5 mb-3">
+                <FaInfoCircle className="w-3 h-3 text-neutral-400" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  Disponibilidad
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-4 rounded bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500" />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">Disponible</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-4 rounded bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-500" />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">Cupos disponibles</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-4 rounded bg-yellow-100 dark:bg-yellow-900/40 border-l-4 border-yellow-500" />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">Casi lleno</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-4 rounded bg-red-100 dark:bg-red-900/40 border-l-4 border-red-500" />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">Lleno</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-4 rounded bg-neutral-100 dark:bg-neutral-800 border-l-4 border-neutral-400" />
+                  <span className="text-xs text-neutral-600 dark:text-neutral-400">Sin límite</span>
+                </div>
               </div>
             </div>
           </div>

@@ -50,6 +50,7 @@ interface PaginatedDataTableProps<T extends BaseItem> {
     onExportPdf?: () => void;  // Opcional: callback para exportar a PDF
     onImport?: () => void;  // Opcional: callback para importar datos
     customActions?: CustomAction<T>[];  // Opcional: acciones personalizadas
+    headerActions?: React.ReactNode;  // Opcional: acciones adicionales en el header (junto a Crear Nuevo)
 }
 
 const DEFAULT_PAGE_SIZE = 15;
@@ -291,6 +292,7 @@ const PaginatedDataTable = <T extends BaseItem>({
     onExportPdf,
     onImport,
     customActions,
+    headerActions,
 }: PaginatedDataTableProps<T>) => {
     // Estado de la Data y UI
     const [data, setData] = useState<T[]>([]);
@@ -599,6 +601,9 @@ const PaginatedDataTable = <T extends BaseItem>({
                                     <span className="hidden sm:inline">Importar</span>
                                 </button>
                             )}
+
+                            {/* Acciones adicionales del header */}
+                            {headerActions}
 
                             {/* Botón crear (solo si onCreateNew está definido) */}
                             {onCreateNew && (

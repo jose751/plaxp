@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaDoorOpen, FaTimes, FaEdit, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { CgSpinner } from 'react-icons/cg';
 import { obtenerAulaPorIdApi, activarAulaApi, desactivarAulaApi } from '../api/aulasApi';
+import { useToast } from '../../../shared/contexts/ToastContext';
 import type { Aula } from '../types/aula.types';
 
 interface ViewAulaModalProps {
@@ -35,6 +36,7 @@ export const ViewAulaModal: React.FC<ViewAulaModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showError } = useToast();
 
   useEffect(() => {
     if (isOpen && aulaId) {
@@ -77,7 +79,8 @@ export const ViewAulaModal: React.FC<ViewAulaModalProps> = ({
       onStatusChange?.();
     } catch (err: any) {
       console.error('Error al cambiar estado:', err);
-      setError(err.message || 'Error al cambiar el estado del aula');
+      showError(err.message || 'Error al cambiar el estado del aula');
+      onClose();
     } finally {
       setToggling(false);
     }
